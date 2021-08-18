@@ -59,6 +59,11 @@ namespace TraderBot.Requests
             var actions = request.Strategy.Run(datapoints, request.Usd);
             var sell = actions.Last();
 
+            foreach (var action in actions)
+            {
+                action.Usd = Math.Round(action.Usd, 2);
+            }
+
             var returnPercentage = (sell.Usd - request.Usd) / request.Usd * 100;
 
             var totalYears = (last.Time - first.Time).TotalDays / 356;

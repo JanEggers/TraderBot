@@ -15,5 +15,10 @@
         public StockDataPoint Stock { get; set; }
 
         public decimal Quantity { get; set; }
+
+        public override string ToString()
+        {
+            return $"{Op} {Usd} {Stock.Time}";
+        }
     }
 }

@@ -5,6 +5,7 @@ using TraderBot.Extensions;
 using Microsoft.AspNetCore.Hosting;
 using AlphaVantage.Net.Stocks.Client;
 using Microsoft.Extensions.DependencyInjection;
+using TraderBot.Strategies;
 
 namespace TraderBot
 {
@@ -23,25 +24,33 @@ namespace TraderBot
 
             await host.Send(new MigrateDatabaseRequest());
 
-            var symbols = new[] { "NASDX", "AAPL" };
+            var symbols = new[] { "NASDX", "AAPL", "TQQQ" };
 
             //await host.RunAsync();
 
             //var timeSeries = await host.Send(new AddTimeSeriesRequest()
             //{
-            //    SymbolName = "NASDX",
+            //    SymbolName = "TQQQ",
             //    Interval = AlphaVantage.Net.Common.Intervals.Interval.Daily
             //});
 
             //await host.Send(new UpdateTimeSeriesRequest() { TimeSeries = timeSeries });
 
 
-            //var result = await host.Services.CreateScope().ServiceProvider.GetRequiredService<StocksClient>().SearchSymbolAsync("nasdaq");
+            //var result = await host.Services.CreateScope().ServiceProvider.GetRequiredService<StocksClient>().SearchSymbolAsync("tqqq");
 
-            var result = await host.Send(new RunTradingStrategyRequest()
+            var buyAndHold = await host.Send(new RunTradingStrategyRequest()
             {
-                SymbolName = "NASDX",
-                Usd = 1000
+                SymbolName = "TQQQ",
+                Usd = 1000,
+                Strategy = new BuyAndHoldStrategy()
+            });
+
+            var macd = await host.Send(new RunTradingStrategyRequest()
+            {
+                SymbolName = "TQQQ",
+                Usd = 1000,
+                Strategy = new MacdStrategy()
             });
         }
     }
