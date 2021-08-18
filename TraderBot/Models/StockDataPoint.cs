@@ -24,8 +24,15 @@ namespace TraderBot.Models
 
         public decimal HighestPrice { get; set; }
 
+        public decimal AdjustedClosingPrice { get; set; }
+
         public DateTime Time { get; set; }
 
         public long Volume { get; set; }
+
+        public override string ToString()
+        {
+            return $"{Time} AdjustedClosingPrice {AdjustedClosingPrice}";
+        }
     }
 }

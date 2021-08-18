@@ -30,11 +30,14 @@ namespace TraderBot.Requests
         {
             var series = await stocksClient.GetTimeSeriesAsync(request.TimeSeries.Symbol.Name,
                 request.TimeSeries.Interval,
-                AlphaVantage.Net.Common.Size.OutputSize.Full);
+                AlphaVantage.Net.Common.Size.OutputSize.Full, isAdjusted: true);
+            
+            var lastUpdate = await tradingContext.StockDataPoints
+                .Where(p => p.TimeSeriesId == request.TimeSeries.Id)
+                .OrderByDescending(p => p.Time)
+                .FirstOrDefaultAsync(cancellationToken);
 
-            var lastUpdate = await tradingContext.StockDataPoints.OrderByDescending(p => p.Time).FirstOrDefaultAsync(cancellationToken);
-
-            var newPoints = series.DataPoints.AsEnumerable();
+            var newPoints = series.DataPoints.AsEnumerable().OfType<AlphaVantage.Net.Stocks.StockAdjustedDataPoint>();
 
             if (lastUpdate != null)
             {
@@ -53,6 +56,7 @@ namespace TraderBot.Requests
                     ClosingPrice = item.ClosingPrice,
                     HighestPrice = item.HighestPrice,
                     LowestPrice = item.LowestPrice,
+                    AdjustedClosingPrice = item.AdjustedClosingPrice,
                     Volume = item.Volume
                 });
             }
