@@ -12,13 +12,22 @@
 
         public decimal Usd { get; set; }
 
+        public decimal Diff { get; set; }
+
         public StockDataPoint Stock { get; set; }
 
         public decimal Quantity { get; set; }
 
         public override string ToString()
         {
-            return $"{Op} {Usd} {Stock.Time}";
+            switch (Op)
+            {
+                case Operation.CloseBuy:
+                    return $"{Op} {Stock.TimeSeries.Symbol.Name} {Usd} {Stock.Time} {Diff}";
+                case Operation.OpenBuy:
+                default:
+                    return $"{Op} {Stock.TimeSeries.Symbol.Name} {Usd} {Stock.Time}";
+            }
         }
     }
 }

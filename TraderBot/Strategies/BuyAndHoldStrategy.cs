@@ -8,8 +8,9 @@ namespace TraderBot.Strategies
 {
     public class BuyAndHoldStrategy : ITradingStrategy
     {
-        public List<TradingAction> Run(List<StockDataPoint> datapoints, decimal usd)
+        public List<TradingAction> Run(IReadOnlyDictionary<string, IReadOnlyList<StockDataPoint>> dataset, decimal usd)
         {
+            var datapoints = dataset.Values.First();
             var first = datapoints.First();
             var last = datapoints.Last();
             var buy = new TradingAction()

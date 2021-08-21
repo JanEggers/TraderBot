@@ -15,8 +15,9 @@ namespace TraderBot.Strategies
             Signal = 30
         };
 
-        public List<TradingAction> Run(List<StockDataPoint> stockDataPoints, decimal usd)
+        public List<TradingAction> Run(IReadOnlyDictionary<string, IReadOnlyList<StockDataPoint>> dataset, decimal usd)
         {
+            var stockDataPoints = dataset.Values.First();
             TradingAction buy = null;
 
             var result = new List<TradingAction>();
@@ -53,7 +54,8 @@ namespace TraderBot.Strategies
                         Usd = usd,
                         Op = TradingAction.Operation.CloseBuy,
                         Stock = data,
-                        Quantity = buy.Quantity
+                        Quantity = buy.Quantity,
+                        Diff = usd - buy.Usd
                     };
                     result.Add(sell);
                     buy = null;

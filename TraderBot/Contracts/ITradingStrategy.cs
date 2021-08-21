@@ -5,6 +5,6 @@ namespace TraderBot.Contracts
 {
     public interface ITradingStrategy
     {
-        List<TradingAction> Run(List<StockDataPoint> stockDataPoints, decimal usd);
+        List<TradingAction> Run(IReadOnlyDictionary<string, IReadOnlyList<StockDataPoint>> dataset, decimal usd);
     }
 }

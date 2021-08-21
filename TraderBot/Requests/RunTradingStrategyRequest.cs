@@ -13,7 +13,8 @@ namespace TraderBot.Requests
 {
     public class RunTradingStrategyRequest : IRequest<RunTradingStrategyResult>
     {
-        public string SymbolName { get; set; }
+        public IReadOnlyList<string> SymbolNames { get; set; }
+
         public DateTime? Start { get; set; }
         public DateTime? End { get; set; }
 
@@ -35,30 +36,28 @@ namespace TraderBot.Requests
 
         public async Task<RunTradingStrategyResult> Handle(RunTradingStrategyRequest request, CancellationToken cancellationToken)
         {
-            var series = await context.TimeSeries
-                    .FirstOrDefaultAsync(p => p.Symbol.Name == request.SymbolName && p.Interval == request.Interval, cancellationToken);
+            var dataset = new Dictionary<string, IReadOnlyList<StockDataPoint>>(); 
 
-            var data = context.StockDataPoints
-                .Where(p => p.TimeSeriesId == series.Id);
-
-            if (request.Start.HasValue)
+            foreach (var symbol in request.SymbolNames)
             {
-                data = data.Where(p => p.Time >= request.Start.Value);
+                dataset.Add(symbol, await ReadDataPoints(request, symbol, cancellationToken));
             }
 
-            if (request.End.HasValue)
-            {
-                data = data.Where(p => p.Time >= request.End.Value);
-            }
 
-            var datapoints = await data
-                .OrderBy(p => p.Time)
-                .ToListAsync(cancellationToken);
-            ;
-
+            var datapoints = dataset.Values.First();
             var first = datapoints.First();
             var last = datapoints.Last();
-            var actions = request.Strategy.Run(datapoints, request.Usd);
+            var actions = request.Strategy.Run(dataset, request.Usd);
+            if (!actions.Any())
+            {
+                return new RunTradingStrategyResult()
+                {
+                    Usd = request.Usd,
+                    Actions = actions
+                };
+            }
+
+
             var sell = actions.Last();
 
             foreach (var action in actions)
@@ -78,6 +77,31 @@ namespace TraderBot.Requests
                 YearlyReturnPercentage = (decimal)yearlyReturnPercentage,
                 Actions = actions
             };
+        }
+
+        private async Task<List<StockDataPoint>> ReadDataPoints(RunTradingStrategyRequest request, string symbol, CancellationToken cancellationToken)
+        {
+            var series = await context.TimeSeries
+                .Include(p => p.Symbol)
+                .FirstOrDefaultAsync(p => p.Symbol.Name == symbol && p.Interval == request.Interval, cancellationToken);
+
+            var data = context.StockDataPoints
+                .Where(p => p.TimeSeriesId == series.Id);
+
+            if (request.Start.HasValue)
+            {
+                data = data.Where(p => p.Time >= request.Start.Value);
+            }
+
+            if (request.End.HasValue)
+            {
+                data = data.Where(p => p.Time >= request.End.Value);
+            }
+
+            var datapoints = await data
+                .OrderBy(p => p.Time)
+                .ToListAsync(cancellationToken);
+            return datapoints;
         }
     }
 }
