@@ -17,6 +17,8 @@ namespace TraderBot.Requests
         public DateTime? Start { get; set; }
         public DateTime? End { get; set; }
 
+        public AlphaVantage.Net.Common.Intervals.Interval Interval { get; set; } = AlphaVantage.Net.Common.Intervals.Interval.Daily;
+
         public decimal Usd { get; set; }
 
         public ITradingStrategy Strategy { get; set; } = new BuyAndHoldStrategy();
@@ -34,7 +36,7 @@ namespace TraderBot.Requests
         public async Task<RunTradingStrategyResult> Handle(RunTradingStrategyRequest request, CancellationToken cancellationToken)
         {
             var series = await context.TimeSeries
-                    .FirstOrDefaultAsync(p => p.Symbol.Name == request.SymbolName && p.Interval == AlphaVantage.Net.Common.Intervals.Interval.Daily, cancellationToken);
+                    .FirstOrDefaultAsync(p => p.Symbol.Name == request.SymbolName && p.Interval == request.Interval, cancellationToken);
 
             var data = context.StockDataPoints
                 .Where(p => p.TimeSeriesId == series.Id);

@@ -1,41 +1,39 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using TraderBot.Contracts;
+using TraderBot.Extensions;
 using TraderBot.Models;
 
 namespace TraderBot.Strategies
 {
     public class MacdStrategy : ITradingStrategy
     {
-        public int Fast { get; set; } = 2;
-
-        public int Slow { get; set; } = 50;
-
-        public int Signal { get; set; } = 30;
+        public Macd Macd { get; set; } = new Macd()
+        {
+            Fast = 2,
+            Slow = 50,
+            Signal = 30
+        };
 
         public List<TradingAction> Run(List<StockDataPoint> stockDataPoints, decimal usd)
         {
-            var slowema = (double)stockDataPoints[0].AdjustedClosingPrice;
-            var fastema = (double)stockDataPoints[0].AdjustedClosingPrice;
-            var signalema = (double)stockDataPoints[0].AdjustedClosingPrice;
-            var yesterdaySlowEma = slowema;
-            var yesterdayFastEma = fastema;
-            var yesterdaySignalema = signalema;
-            var yesterdayMacd = signalema;
             TradingAction buy = null;
 
             var result = new List<TradingAction>();
 
+            var start = (double)stockDataPoints[0].AdjustedClosingPrice;
+
+            var yesterdayMacd = new Macd()
+            {
+                Fast = start,
+                Slow = start,
+                Signal = start
+            };
+
             foreach (var data in stockDataPoints)
             {
-                slowema = Ema((double)data.AdjustedClosingPrice, Slow, yesterdaySlowEma);
-                fastema = Ema((double)data.AdjustedClosingPrice, Fast, yesterdayFastEma);
-
-                var macd = fastema - slowema;
-
-                signalema = Ema(macd, Signal, yesterdaySignalema);
-
-                if (signalema < macd && yesterdaySignalema > yesterdayMacd)
+                var macd = Indicators.Macd((double)data.AdjustedClosingPrice, Macd, yesterdayMacd);
+                if (macd.Signal < macd.Value && yesterdayMacd.Signal > yesterdayMacd.Value)
                 {
                     buy = new TradingAction()
                     {
@@ -47,7 +45,7 @@ namespace TraderBot.Strategies
                     result.Add(buy);
                 }
 
-                if (signalema > macd && yesterdaySignalema < yesterdayMacd && buy != null)
+                if (macd.Signal > macd.Value && yesterdayMacd.Signal < yesterdayMacd.Value && buy != null)
                 {
                     usd = buy.Quantity * data.AdjustedClosingPrice;
                     var sell = new TradingAction()
@@ -61,9 +59,6 @@ namespace TraderBot.Strategies
                     buy = null;
                 }
 
-                yesterdaySlowEma = slowema;
-                yesterdayFastEma = fastema;
-                yesterdaySignalema = signalema;
                 yesterdayMacd = macd;
             }
 
@@ -82,12 +77,6 @@ namespace TraderBot.Strategies
             }
 
             return result;
-        }
-
-        private static double Ema(double todaysPrice, double numberOfDays, double EMAYesterday) 
-        {
-            double k = 2 / (numberOfDays + 1);
-            return todaysPrice * k + EMAYesterday * (1 - k);
         }
     }
 }

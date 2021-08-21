@@ -27,7 +27,7 @@ namespace TraderBot.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     SymbolId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Interval = table.Column<int>(type: "INTEGER", nullable: false)
+                    Interval = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -51,6 +51,7 @@ namespace TraderBot.Migrations
                     OpeningPrice = table.Column<decimal>(type: "TEXT", nullable: false),
                     LowestPrice = table.Column<decimal>(type: "TEXT", nullable: false),
                     HighestPrice = table.Column<decimal>(type: "TEXT", nullable: false),
+                    AdjustedClosingPrice = table.Column<decimal>(type: "TEXT", nullable: false),
                     Time = table.Column<DateTime>(type: "TEXT", nullable: false),
                     Volume = table.Column<long>(type: "INTEGER", nullable: false)
                 },

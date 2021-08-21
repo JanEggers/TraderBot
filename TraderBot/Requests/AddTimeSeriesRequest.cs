@@ -43,7 +43,7 @@ namespace TraderBot.Requests
                 dailySeries = new TimeSeries()
                 {
                     Symbol = symbol,
-                    Interval = AlphaVantage.Net.Common.Intervals.Interval.Daily
+                    Interval = request.Interval
                 };
                 symbol.TimeSeries.Add(dailySeries);
             }

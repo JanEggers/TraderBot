@@ -77,8 +77,9 @@ namespace TraderBot.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("Interval")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("Interval")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("SymbolId")
                         .HasColumnType("INTEGER");

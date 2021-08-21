@@ -23,6 +23,9 @@ namespace TraderBot.Models
                 p.Time
             }).IsUnique();
 
+
+            modelBuilder.Entity<TimeSeries>().Property(p => p.Interval).HasConversion<string>();
+
             modelBuilder.Entity<TimeSeries>().HasIndex(p => new
             {
                 p.SymbolId,

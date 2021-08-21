@@ -24,33 +24,46 @@ namespace TraderBot
 
             await host.Send(new MigrateDatabaseRequest());
 
-            var symbols = new[] { "NASDX", "AAPL", "TQQQ" };
+            var symbols = new[] { "NASDX", "AAPL", "TQQQ", "SWDA.LON" };
+
+            var symbol = symbols[2];
+            var interval = AlphaVantage.Net.Common.Intervals.Interval.Min60;
 
             //await host.RunAsync();
 
             //var timeSeries = await host.Send(new AddTimeSeriesRequest()
             //{
-            //    SymbolName = "TQQQ",
-            //    Interval = AlphaVantage.Net.Common.Intervals.Interval.Daily
+            //    SymbolName = symbol,
+            //    Interval = interval
             //});
 
             //await host.Send(new UpdateTimeSeriesRequest() { TimeSeries = timeSeries });
 
 
-            //var result = await host.Services.CreateScope().ServiceProvider.GetRequiredService<StocksClient>().SearchSymbolAsync("tqqq");
+            //var result = await host.Services.CreateScope().ServiceProvider.GetRequiredService<StocksClient>().SearchSymbolAsync("swda.l");
 
             var buyAndHold = await host.Send(new RunTradingStrategyRequest()
             {
-                SymbolName = "TQQQ",
+                SymbolName = symbol,
                 Usd = 1000,
-                Strategy = new BuyAndHoldStrategy()
+                Strategy = new BuyAndHoldStrategy(),
+                Interval = interval,
             });
 
             var macd = await host.Send(new RunTradingStrategyRequest()
             {
-                SymbolName = "TQQQ",
+                SymbolName = symbol,
                 Usd = 1000,
-                Strategy = new MacdStrategy()
+                Strategy = new MacdStrategy() 
+                {
+                    Macd = new Macd() 
+                    {
+                        Fast = 2,
+                        Slow = 50,
+                        Signal = 30
+                    }
+                },
+                Interval = interval,                
             });
         }
     }

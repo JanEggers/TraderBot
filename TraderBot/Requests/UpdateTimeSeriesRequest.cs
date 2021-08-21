@@ -37,7 +37,7 @@ namespace TraderBot.Requests
                 .OrderByDescending(p => p.Time)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            var newPoints = series.DataPoints.AsEnumerable().OfType<AlphaVantage.Net.Stocks.StockAdjustedDataPoint>();
+            var newPoints = series.DataPoints.AsEnumerable();
 
             if (lastUpdate != null)
             {
@@ -48,7 +48,7 @@ namespace TraderBot.Requests
 
             foreach (var item in newPoints)
             {
-                tradingContext.Add(new StockDataPoint()
+                var dp = new StockDataPoint()
                 {
                     TimeSeriesId = request.TimeSeries.Id,
                     Time = item.Time,
@@ -56,9 +56,20 @@ namespace TraderBot.Requests
                     ClosingPrice = item.ClosingPrice,
                     HighestPrice = item.HighestPrice,
                     LowestPrice = item.LowestPrice,
-                    AdjustedClosingPrice = item.AdjustedClosingPrice,
+                    AdjustedClosingPrice = item.ClosingPrice,
                     Volume = item.Volume
-                });
+                };
+
+                switch (item)
+                {
+                    case AlphaVantage.Net.Stocks.StockAdjustedDataPoint adjusted:
+                        dp.AdjustedClosingPrice = adjusted.AdjustedClosingPrice;
+                        break;
+                    default:
+                        break;
+                }
+
+                tradingContext.Add(dp);
             }
 
             await tradingContext.SaveChangesAsync(cancellationToken);

@@ -9,8 +9,8 @@ using TraderBot.Models;
 namespace TraderBot.Migrations
 {
     [DbContext(typeof(TradingContext))]
-    [Migration("20210818171434_AddedAdjustedClosingPrice")]
-    partial class AddedAdjustedClosingPrice
+    [Migration("20210821020338_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -79,8 +79,9 @@ namespace TraderBot.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("Interval")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("Interval")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("SymbolId")
                         .HasColumnType("INTEGER");
