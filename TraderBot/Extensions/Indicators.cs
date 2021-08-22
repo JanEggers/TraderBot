@@ -13,12 +13,17 @@ namespace TraderBot.Extensions
             return source * k + lastEma * (1 - k);
         }
 
-        public static IEnumerable<double> Ema(this IEnumerable<double> source, int intervals) 
+        public static double Sma(this IEnumerable<double> source, double intervals)
         {
-            return source.SelectWithLast((source, last) => Ema(source, intervals, last));
+            return source.Sum() / intervals;
         }
 
-        public static IEnumerable<T> SelectWithLast<T>(this IEnumerable<T> source, Func<T,T,T> selector)
+        public static IEnumerable<double> Ema(this IEnumerable<double> source, int intervals) 
+        {
+            return source.SelectWithLastOut((source, last) => Ema(source, intervals, last));
+        }
+
+        public static IEnumerable<T> SelectWithLastOut<T>(this IEnumerable<T> source, Func<T,T,T> selector)
         {
             var last = source.FirstOrDefault();
 
@@ -27,6 +32,17 @@ namespace TraderBot.Extensions
                 var value = selector(item, last);
                 yield return value;
                 last = value;
+            }
+        }
+
+        public static IEnumerable<T> SelectWithLastIn<T>(this IEnumerable<T> source, Func<T, T, T> selector)
+        {
+            var last = source.FirstOrDefault();
+
+            foreach (var item in source)
+            {
+                yield return selector(item, last);
+                last = item;
             }
         }
 
@@ -103,6 +119,23 @@ namespace TraderBot.Extensions
                     }
                 }
             }
+        }
+
+
+        public static double Rsi(this IEnumerable<double> source, int currentElemenet, int interval)
+        {
+            var skip = Math.Max(0, currentElemenet - (interval + 1));
+            var take = Math.Min(interval + 1, currentElemenet + 1);
+
+            var diffs = source.Skip(skip).Take(take).SelectWithLastIn((current, last) => current - last);
+
+            var positive = diffs.Select(v => v > 0 ? v : 0).Ema(interval).Last();
+            var negative = diffs.Select(v => v < 0 ? v : 0).Ema(interval).Last();
+
+            var rs = Math.Abs(positive / negative);
+            var rsi = 100 - 100 / (1 + rs);
+
+            return rsi;
         }
     }
 }
