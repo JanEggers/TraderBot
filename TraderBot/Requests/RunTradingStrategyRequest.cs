@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TraderBot.Contracts;
+using TraderBot.Extensions;
 using TraderBot.Models;
 using TraderBot.Strategies;
 
@@ -45,8 +46,6 @@ namespace TraderBot.Requests
 
 
             var datapoints = dataset.Values.First();
-            var first = datapoints.First();
-            var last = datapoints.Last();
             var actions = request.Strategy.Run(dataset, request.Usd);
             if (!actions.Any())
             {
@@ -65,8 +64,56 @@ namespace TraderBot.Requests
                 action.Usd = Math.Round(action.Usd, 2);
             }
 
+            var maxVolatility = (decimal)0;
+            Trend worstTrend = null;
+
+            foreach (var (buyAction, sellAction) in actions.Trades())
+            {
+                var relevantPoints = dataset[buyAction.Stock.TimeSeries.Symbol.Name].SkipWhile(p => buyAction.Stock != p).TakeWhile(p => sellAction.Stock != p);
+
+                var peak = relevantPoints.First();
+                var bottom = peak;
+                var start = peak;
+
+                var trends = new List<Trend>();
+
+                foreach (var item in relevantPoints)
+                {
+                    if (item.AdjustedClosingPrice > peak.AdjustedClosingPrice)
+                    {
+                        peak = item;
+
+                        trends.Add(new Trend()
+                        {
+                            Start = start,
+                            Peak = peak,
+                            Bottom = bottom,
+                        });
+                        bottom = peak;
+                        start = peak;
+                    }
+
+                    if (item.AdjustedClosingPrice < bottom.AdjustedClosingPrice)
+                    {
+                        bottom = item;
+                    }
+                }
+
+                foreach (var item in trends)
+                {
+                    var volatility = (item.Bottom.AdjustedClosingPrice / item.Start.AdjustedClosingPrice - 1) * 100;
+                    if (volatility < maxVolatility)
+                    {
+                        maxVolatility = volatility;
+                        worstTrend = item;
+                    }
+                }
+            }
+
             var returnPercentage = (sell.Usd - request.Usd) / request.Usd * 100;
 
+            var first = datapoints.First();
+            var last = datapoints.Last();
             var totalYears = (last.Time - first.Time).TotalDays / 356;
             var yearlyReturnPercentage = (Math.Pow((double)sell.Usd / (double)request.Usd, 1 / totalYears) - 1) * 100;
 
@@ -75,7 +122,9 @@ namespace TraderBot.Requests
                 Usd = sell.Usd,
                 TotalReturnPercentage = returnPercentage,
                 YearlyReturnPercentage = (decimal)yearlyReturnPercentage,
-                Actions = actions
+                Actions = actions,
+                MaxVolatility = maxVolatility,
+                WorstTrend = worstTrend
             };
         }
 

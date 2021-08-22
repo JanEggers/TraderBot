@@ -31,7 +31,7 @@ namespace TraderBot
             var symbols = new[] {
                 "NASDX",    //buyandhold    6% // macd 4/37/11   3%
                 "AAPL",     //buyandhold   27% // macd 4/37/11  17%
-                "TQQQ",     //buyandhold   53% // macd 4/37/11  44%  with hedge 45%
+                "TQQQ",     //buyandhold   53%/-70% // macd 4/37/11  44%/-16%  with hedge 45%/-16%
                 "SWDA.LON", //buyandhold   12% // macd 2/8/36    6%
                 "UVXY",     //buyandhold -100% // macd 2/3/60  -50%
                 "SQQQ",     //buyandhold  -54% // macd 2/36/26 -29%

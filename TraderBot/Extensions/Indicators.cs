@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using TraderBot.Models;
 
 namespace TraderBot.Extensions
 {
@@ -45,6 +46,29 @@ namespace TraderBot.Extensions
                 Value = macd,
                 Signal = signalema
             };
+        }
+
+        public static IEnumerable<(TradingAction, TradingAction)> Trades(this IEnumerable<TradingAction> source)
+        {
+            foreach (var item in source.Page(2))
+            {
+                yield return (item[0], item[1]);
+            }
+        }
+
+        public static IEnumerable<IReadOnlyList<T>> Page<T>(this IEnumerable<T> source, int size)
+        {
+            var page = new List<T>(size);
+
+            foreach (var item in source)
+            {
+                page.Add(item);
+                if (page.Count == size)
+                {
+                    yield return page;
+                    page = new List<T>(size);
+                }
+            }
         }
     }
 }

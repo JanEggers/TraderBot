@@ -9,6 +9,10 @@ namespace TraderBot.Models
         public decimal TotalReturnPercentage { get; set; }
         public decimal YearlyReturnPercentage { get; set; }
 
+        public decimal MaxVolatility { get; set; }
+
+        public Trend WorstTrend { get; set; }
+
         public List<TradingAction> Actions { get; set; } = new List<TradingAction>();
     }
 }
