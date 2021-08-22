@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace TraderBot.Models
 {
@@ -12,6 +13,8 @@ namespace TraderBot.Models
         public decimal MaxVolatility { get; set; }
 
         public Trend WorstTrend { get; set; }
+
+        public TimeSpan AverageDownTrendDuration { get; set; }
 
         public List<TradingAction> Actions { get; set; } = new List<TradingAction>();
     }

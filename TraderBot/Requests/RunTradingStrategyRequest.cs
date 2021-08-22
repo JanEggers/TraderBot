@@ -67,46 +67,15 @@ namespace TraderBot.Requests
             var maxVolatility = (decimal)0;
             Trend worstTrend = null;
 
-            foreach (var (buyAction, sellAction) in actions.Trades())
+            var trends = actions.Trends(dataset).ToList();
+
+            foreach (var item in trends)
             {
-                var relevantPoints = dataset[buyAction.Stock.TimeSeries.Symbol.Name].SkipWhile(p => buyAction.Stock != p).TakeWhile(p => sellAction.Stock != p);
-
-                var peak = relevantPoints.First();
-                var bottom = peak;
-                var start = peak;
-
-                var trends = new List<Trend>();
-
-                foreach (var item in relevantPoints)
+                var volatility = (item.Bottom.AdjustedClosingPrice / item.Start.AdjustedClosingPrice - 1) * 100;
+                if (volatility < maxVolatility)
                 {
-                    if (item.AdjustedClosingPrice > peak.AdjustedClosingPrice)
-                    {
-                        peak = item;
-
-                        trends.Add(new Trend()
-                        {
-                            Start = start,
-                            Peak = peak,
-                            Bottom = bottom,
-                        });
-                        bottom = peak;
-                        start = peak;
-                    }
-
-                    if (item.AdjustedClosingPrice < bottom.AdjustedClosingPrice)
-                    {
-                        bottom = item;
-                    }
-                }
-
-                foreach (var item in trends)
-                {
-                    var volatility = (item.Bottom.AdjustedClosingPrice / item.Start.AdjustedClosingPrice - 1) * 100;
-                    if (volatility < maxVolatility)
-                    {
-                        maxVolatility = volatility;
-                        worstTrend = item;
-                    }
+                    maxVolatility = volatility;
+                    worstTrend = item;
                 }
             }
 
@@ -124,6 +93,7 @@ namespace TraderBot.Requests
                 YearlyReturnPercentage = (decimal)yearlyReturnPercentage,
                 Actions = actions,
                 MaxVolatility = maxVolatility,
+                AverageDownTrendDuration = TimeSpan.FromTicks((long)trends.Select(t => t.Bottom.Time - t.Start.Time).Where(t => t.TotalDays > 0).Select(t => t.Ticks).Average()),
                 WorstTrend = worstTrend
             };
         }

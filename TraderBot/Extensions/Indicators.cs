@@ -70,5 +70,39 @@ namespace TraderBot.Extensions
                 }
             }
         }
+
+        public static IEnumerable<Trend> Trends(this IEnumerable<TradingAction> source, Dictionary<string, IReadOnlyList<StockDataPoint>> dataset)
+        {
+            foreach (var (buyAction, sellAction) in source.Trades())
+            {
+                var relevantPoints = dataset[buyAction.Stock.TimeSeries.Symbol.Name].SkipWhile(p => buyAction.Stock != p).TakeWhile(p => sellAction.Stock != p);
+
+                var peak = relevantPoints.First();
+                var bottom = peak;
+                var start = peak;
+
+                foreach (var item in relevantPoints)
+                {
+                    if (item.AdjustedClosingPrice > peak.AdjustedClosingPrice)
+                    {
+                        peak = item;
+
+                        yield return new Trend()
+                        {
+                            Start = start,
+                            Peak = peak,
+                            Bottom = bottom,
+                        };
+                        bottom = peak;
+                        start = peak;
+                    }
+
+                    if (item.AdjustedClosingPrice < bottom.AdjustedClosingPrice)
+                    {
+                        bottom = item;
+                    }
+                }
+            }
+        }
     }
 }
