@@ -1,15 +1,11 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿namespace TraderBot.Models;
 
-namespace TraderBot.Models
+public class Symbol
 {
-    public class Symbol
-    {
-        [Key]
-        public int Id { get; set; }
+    [Key]
+    public int Id { get; set; }
 
-        public string Name { get; set; }
+    public string Name { get; set; }
 
-        public ICollection<TimeSeries> TimeSeries { get; set; }
-    }
+    public ICollection<TimeSeries> TimeSeries { get; set; }
 }

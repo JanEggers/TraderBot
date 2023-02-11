@@ -1,7 +1,6 @@
-﻿namespace TraderBot.Strategies.MachineLearning
+﻿namespace TraderBot.Strategies.MachineLearning;
+
+public class ModelOutput
 {
-    public class ModelOutput
-    {
-        public double Op { get; set; }
-    }
+    public double Op { get; set; }
 }

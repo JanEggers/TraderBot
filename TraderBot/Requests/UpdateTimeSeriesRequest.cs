@@ -1,84 +1,74 @@
-﻿using AlphaVantage.Net.Stocks.Client;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using TraderBot.Models;
+﻿namespace TraderBot.Requests;
 
-namespace TraderBot.Requests
+public class UpdateTimeSeriesRequest : IRequest
 {
-    public class UpdateTimeSeriesRequest : IRequest
+    public TimeSeries TimeSeries { get; set; }
+}
+
+public class UpdateTimeSeriesRequestHandler : IRequestHandler<UpdateTimeSeriesRequest>
+{
+    private readonly TradingContext tradingContext;
+    private readonly StocksClient stocksClient;
+    private readonly ILogger<UpdateTimeSeriesRequestHandler> logger;
+
+    public UpdateTimeSeriesRequestHandler(TradingContext tradingContext, StocksClient stocksClient, ILogger<UpdateTimeSeriesRequestHandler> logger)
     {
-        public TimeSeries TimeSeries { get; set; }
+        this.tradingContext = tradingContext;
+        this.stocksClient = stocksClient;
+        this.logger = logger;
     }
-
-    public class UpdateTimeSeriesRequestHandler : IRequestHandler<UpdateTimeSeriesRequest>
+    public async Task<Unit> Handle(UpdateTimeSeriesRequest request, CancellationToken cancellationToken)
     {
-        private readonly TradingContext tradingContext;
-        private readonly StocksClient stocksClient;
-        private readonly ILogger<UpdateTimeSeriesRequestHandler> logger;
+        var series = await stocksClient.GetTimeSeriesAsync(request.TimeSeries.Symbol.Name,
+            request.TimeSeries.Interval,
+            AlphaVantage.Net.Common.Size.OutputSize.Full, isAdjusted: true);
+        
+        var lastUpdate = await tradingContext.StockDataPoints
+            .Where(p => p.TimeSeriesId == request.TimeSeries.Id)
+            .OrderByDescending(p => p.Time)
+            .FirstOrDefaultAsync(cancellationToken);
 
-        public UpdateTimeSeriesRequestHandler(TradingContext tradingContext, StocksClient stocksClient, ILogger<UpdateTimeSeriesRequestHandler> logger)
+        var newPoints = series.DataPoints.AsEnumerable();
+
+        if (lastUpdate != null)
         {
-            this.tradingContext = tradingContext;
-            this.stocksClient = stocksClient;
-            this.logger = logger;
+            newPoints = newPoints.Where(p => p.Time > lastUpdate.Time);
         }
-        public async Task<Unit> Handle(UpdateTimeSeriesRequest request, CancellationToken cancellationToken)
+
+        newPoints = newPoints.OrderBy(p => p.Time);
+
+        foreach (var item in newPoints)
         {
-            var series = await stocksClient.GetTimeSeriesAsync(request.TimeSeries.Symbol.Name,
-                request.TimeSeries.Interval,
-                AlphaVantage.Net.Common.Size.OutputSize.Full, isAdjusted: true);
-            
-            var lastUpdate = await tradingContext.StockDataPoints
-                .Where(p => p.TimeSeriesId == request.TimeSeries.Id)
-                .OrderByDescending(p => p.Time)
-                .FirstOrDefaultAsync(cancellationToken);
-
-            var newPoints = series.DataPoints.AsEnumerable();
-
-            if (lastUpdate != null)
+            var dp = new StockDataPoint()
             {
-                newPoints = newPoints.Where(p => p.Time > lastUpdate.Time);
+                TimeSeriesId = request.TimeSeries.Id,
+                Time = item.Time,
+                OpeningPrice = item.OpeningPrice,
+                ClosingPrice = item.ClosingPrice,
+                HighestPrice = item.HighestPrice,
+                LowestPrice = item.LowestPrice,
+                AdjustedClosingPrice = item.ClosingPrice,
+                Volume = item.Volume
+            };
+
+            switch (item)
+            {
+                case AlphaVantage.Net.Stocks.StockAdjustedDataPoint adjusted:
+                    dp.AdjustedClosingPrice = adjusted.AdjustedClosingPrice;
+                    break;
+                default:
+                    break;
             }
 
-            newPoints = newPoints.OrderBy(p => p.Time);
-
-            foreach (var item in newPoints)
-            {
-                var dp = new StockDataPoint()
-                {
-                    TimeSeriesId = request.TimeSeries.Id,
-                    Time = item.Time,
-                    OpeningPrice = item.OpeningPrice,
-                    ClosingPrice = item.ClosingPrice,
-                    HighestPrice = item.HighestPrice,
-                    LowestPrice = item.LowestPrice,
-                    AdjustedClosingPrice = item.ClosingPrice,
-                    Volume = item.Volume
-                };
-
-                switch (item)
-                {
-                    case AlphaVantage.Net.Stocks.StockAdjustedDataPoint adjusted:
-                        dp.AdjustedClosingPrice = adjusted.AdjustedClosingPrice;
-                        break;
-                    default:
-                        break;
-                }
-
-                tradingContext.Add(dp);
-            }
-
-            await tradingContext.SaveChangesAsync(cancellationToken);
-
-            lastUpdate = await tradingContext.StockDataPoints.OrderByDescending(p => p.Time).FirstOrDefaultAsync(cancellationToken);
-
-            logger.LogInformation($"updated {request.TimeSeries.Symbol.Name} until {lastUpdate.Time}");
-
-            return Unit.Value;
+            tradingContext.Add(dp);
         }
+
+        await tradingContext.SaveChangesAsync(cancellationToken);
+
+        lastUpdate = await tradingContext.StockDataPoints.OrderByDescending(p => p.Time).FirstOrDefaultAsync(cancellationToken);
+
+        logger.LogInformation($"updated {request.TimeSeries.Symbol.Name} until {lastUpdate.Time}");
+
+        return Unit.Value;
     }
 }

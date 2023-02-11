@@ -363,3 +363,5 @@ MigrationBackup/
 FodyWeavers.xsd
 /TraderBot/Secrets.cs
 /TraderBot/Data.db
+/TraderBot/Data.db-shm
+/TraderBot/Data.db-wal

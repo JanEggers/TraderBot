@@ -1,55 +1,46 @@
-﻿using MediatR;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using TraderBot.Models;
+﻿namespace TraderBot.Requests;
 
-namespace TraderBot.Requests
+public class AddTimeSeriesRequest : IRequest<TimeSeries>
 {
-    public class AddTimeSeriesRequest : IRequest<TimeSeries>
-    {
-        public string SymbolName { get; set; }
+    public string SymbolName { get; set; }
 
-        public AlphaVantage.Net.Common.Intervals.Interval Interval { get; set; }
+    public AlphaVantage.Net.Common.Intervals.Interval Interval { get; set; }
+}
+
+public class AddTimeSeriesRequestHandler : IRequestHandler<AddTimeSeriesRequest, TimeSeries>
+{
+    private readonly TradingContext tradingContext;
+
+    public AddTimeSeriesRequestHandler(TradingContext tradingContext)
+    {
+        this.tradingContext = tradingContext;
     }
 
-    public class AddTimeSeriesRequestHandler : IRequestHandler<AddTimeSeriesRequest, TimeSeries>
+    public async Task<TimeSeries> Handle(AddTimeSeriesRequest request, CancellationToken cancellationToken)
     {
-        private readonly TradingContext tradingContext;
-
-        public AddTimeSeriesRequestHandler(TradingContext tradingContext)
+        var symbol = await tradingContext.Symbols.Include(s => s.TimeSeries).FirstOrDefaultAsync(s => s.Name == request.SymbolName, cancellationToken);
+        if (symbol == null)
         {
-            this.tradingContext = tradingContext;
+            symbol = new Symbol()
+            {
+                Name = request.SymbolName,
+                TimeSeries = new List<TimeSeries>()
+            };
+            tradingContext.Symbols.Add(symbol);
         }
 
-        public async Task<TimeSeries> Handle(AddTimeSeriesRequest request, CancellationToken cancellationToken)
+        var dailySeries = symbol.TimeSeries.FirstOrDefault(s => s.Interval == request.Interval);
+        if (dailySeries == null)
         {
-            var symbol = await tradingContext.Symbols.Include(s => s.TimeSeries).FirstOrDefaultAsync(s => s.Name == request.SymbolName, cancellationToken);
-            if (symbol == null)
+            dailySeries = new TimeSeries()
             {
-                symbol = new Symbol()
-                {
-                    Name = request.SymbolName,
-                    TimeSeries = new List<TimeSeries>()
-                };
-                tradingContext.Symbols.Add(symbol);
-            }
-
-            var dailySeries = symbol.TimeSeries.FirstOrDefault(s => s.Interval == request.Interval);
-            if (dailySeries == null)
-            {
-                dailySeries = new TimeSeries()
-                {
-                    Symbol = symbol,
-                    Interval = request.Interval
-                };
-                symbol.TimeSeries.Add(dailySeries);
-            }
-
-            await tradingContext.SaveChangesAsync(cancellationToken);
-            return dailySeries;
+                Symbol = symbol,
+                Interval = request.Interval
+            };
+            symbol.TimeSeries.Add(dailySeries);
         }
+
+        await tradingContext.SaveChangesAsync(cancellationToken);
+        return dailySeries;
     }
 }

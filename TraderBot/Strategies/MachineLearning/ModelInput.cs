@@ -1,13 +1,10 @@
-﻿using System;
+﻿namespace TraderBot.Strategies.MachineLearning;
 
-namespace TraderBot.Strategies.MachineLearning
+public class ModelInput 
 {
-    public class ModelInput 
-    {
-        public DateTime Time { get; set; }
+    public DateTime Time { get; set; }
 
-        public double Year { get; set; }
+    public double Year { get; set; }
 
-        public double Price { get; set; }
-    }
+    public double Price { get; set; }
 }

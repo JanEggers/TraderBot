@@ -1,48 +1,41 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.ML;
-using Microsoft.ML.Trainers;
-using System.Collections.Generic;
-using System.Linq;
-using TraderBot.Contracts;
-using TraderBot.Models;
+﻿using Microsoft.ML;
 
-namespace TraderBot.Strategies.MachineLearning
+namespace TraderBot.Strategies.MachineLearning;
+
+public class MachineLearningStrategy : ITradingStrategy
 {
-    public class MachineLearningStrategy : ITradingStrategy
+    public List<TradingAction> Run(IReadOnlyDictionary<string, IReadOnlyList<StockDataPoint>> dataset, decimal usd)
     {
-        public List<TradingAction> Run(IReadOnlyDictionary<string, IReadOnlyList<StockDataPoint>> dataset, decimal usd)
+        var stockDataPoints = dataset.Values.First();
+        var result = new List<TradingAction>();
+
+
+        var mlContext = new MLContext();
+
+        var dataView = mlContext.Data.LoadFromEnumerable(stockDataPoints
+            .Where(p => p.Time.Year < 2012)
+            .Select(p => new ModelInput() 
         {
-            var stockDataPoints = dataset.Values.First();
-            var result = new List<TradingAction>();
+            Price = (double)p.AdjustedClosingPrice,
+            Time = p.Time,
+            Year = p.Time.Year
+        }));
 
+        //https://docs.microsoft.com/en-us/dotnet/machine-learning/tutorials/time-series-demand-forecasting
 
-            var mlContext = new MLContext();
+        var forecastingPipeline = mlContext.Forecasting.ForecastBySsa(
+            outputColumnName: "Op",
+            inputColumnName: "Price",
+            windowSize: 7,
+            seriesLength: 30,
+            trainSize: 365,
+            horizon: 7,
+            confidenceLevel: 0.95f);
 
-            var dataView = mlContext.Data.LoadFromEnumerable(stockDataPoints
-                .Where(p => p.Time.Year < 2012)
-                .Select(p => new ModelInput() 
-            {
-                Price = (double)p.AdjustedClosingPrice,
-                Time = p.Time,
-                Year = p.Time.Year
-            }));
+        var forecaster = forecastingPipeline.Fit(dataView);
 
-            https://docs.microsoft.com/en-us/dotnet/machine-learning/tutorials/time-series-demand-forecasting
+        //IDataView predictions = model.Transform(testData);
 
-            var forecastingPipeline = mlContext.Forecasting.ForecastBySsa(
-                outputColumnName: "Op",
-                inputColumnName: "Price",
-                windowSize: 7,
-                seriesLength: 30,
-                trainSize: 365,
-                horizon: 7,
-                confidenceLevel: 0.95f);
-
-            var forecaster = forecastingPipeline.Fit(dataView);
-
-            //IDataView predictions = model.Transform(testData);
-
-            return result;
-        }
+        return result;
     }
 }
