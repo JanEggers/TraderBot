@@ -29,6 +29,7 @@ public class CreateDatasetRequestHanlder : IRequestHandler<CreateDatasetRequest,
         {
             var series = await _context.TimeSeries
                 .Include(p => p.Symbol)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.Symbol.Name == symbol && p.Interval == request.Interval, cancellationToken);
 
             if (series == null)
@@ -51,7 +52,13 @@ public class CreateDatasetRequestHanlder : IRequestHandler<CreateDatasetRequest,
 
             var datapoints = await data
                 .OrderBy(p => p.Time)
+                .AsNoTracking()
                 .ToListAsync(cancellationToken);
+
+            foreach (var point in datapoints) 
+            {
+                point.TimeSeries = series;
+            }
 
             result.Quotes.Add(symbol, datapoints);
             result.Start = datapoints.First().Time;

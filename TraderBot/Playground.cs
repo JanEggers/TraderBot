@@ -29,7 +29,7 @@ public class Playground : BackgroundService
             "DTE.DEX"   //buyandhold    6,3%/-40% // macd 19/3/81 9.6%/-31%
         };
 
-        var symbol = 2;
+        var symbol = 3;
 
         var macds = new Macd[]
         {
@@ -69,13 +69,13 @@ public class Playground : BackgroundService
         var shortSymbol = symbols[3];
         var interval = AlphaVantage.Net.Common.Intervals.Interval.Daily;
 
-        var timeSeries = await _serviceScopeFactory.Send(new AddTimeSeriesRequest()
-        {
-            SymbolName = longSymbol,
-            Interval = interval
-        });
+        //var timeSeries = await _serviceScopeFactory.Send(new AddTimeSeriesRequest()
+        //{
+        //    SymbolName = longSymbol,
+        //    Interval = interval
+        //});
 
-        await _serviceScopeFactory.Send(new UpdateTimeSeriesRequest() { TimeSeries = timeSeries });
+        //await _serviceScopeFactory.Send(new UpdateTimeSeriesRequest() { TimeSeries = timeSeries });
 
 
         //var result = await _serviceScopeFactory.Services.CreateScope().ServiceProvider.GetRequiredService<StocksClient>().SearchSymbolAsync("DTE");
@@ -93,6 +93,12 @@ public class Playground : BackgroundService
             Dataset = dataset
         });
 
+        var buyAndHoldTrends = await _serviceScopeFactory.Send(new AnalyseTrendsRequest()
+        {
+            StrategyResults = buyAndHold,
+            Dataset = dataset
+        });
+
         var macd = await _serviceScopeFactory.Send(new RunTradingStrategyRequest()
         {
             Usd = 1000,
@@ -100,6 +106,12 @@ public class Playground : BackgroundService
             {
                 Macd = macds[symbol]
             },
+            Dataset = dataset
+        });
+
+        var macdTrends = await _serviceScopeFactory.Send(new AnalyseTrendsRequest()
+        {
+            StrategyResults = macd,
             Dataset = dataset
         });
 
