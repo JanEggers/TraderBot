@@ -9,6 +9,8 @@ public class Trend
 
     public decimal Volatility { get; set; }
 
+    public TimeSpan Duration { get; set; }
+
     public override string ToString()
     {
         return $"{Start.Time} {Peak.Time} {Bottom.AdjustedClosingPrice} {Peak.AdjustedClosingPrice}";

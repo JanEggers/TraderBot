@@ -7,7 +7,8 @@ public class RunTradingStrategyResult
     public decimal TotalReturnPercentage { get; set; }
     public decimal YearlyReturnPercentage { get; set; }
 
-    public List<Trend> Trends { get; set; }
+    public List<Trend> TrendsByVolatility { get; set; }
+    public List<Trend> TrendsByDuration { get; set; }
     public List<Trend> TrendsUnsorted { get; set; }
 
     public Trend WorstTrend { get; set; }

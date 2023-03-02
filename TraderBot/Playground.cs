@@ -29,17 +29,53 @@ public class Playground : BackgroundService
             "DTE.DEX"   //buyandhold    6,3%/-40% // macd 19/3/81 9.6%/-31%
         };
 
-        var longSymbol = symbols[2];
+        var symbol = 2;
+
+        var macds = new Macd[]
+        {
+            new ()
+            {
+                Fast = 18,
+                Slow = 4,
+                Signal = 2
+            },
+            new ()
+            {
+                Fast = 2,
+                Slow = 61,
+                Signal = 98
+            },
+            new ()
+            {
+                Fast = 23,
+                Slow = 30,
+                Signal = 3
+            },
+            new ()
+            {
+                Fast = 5,
+                Slow = 3,
+                Signal = 2
+            },
+            new ()
+            {
+                Fast = 19,
+                Slow = 3,
+                Signal = 81
+            }
+        };
+
+        var longSymbol = symbols[symbol];
         var shortSymbol = symbols[3];
         var interval = AlphaVantage.Net.Common.Intervals.Interval.Daily;
 
-        //var timeSeries = await _serviceScopeFactory.Send(new AddTimeSeriesRequest()
-        //{
-        //    SymbolName = longSymbol,
-        //    Interval = interval
-        //});
+        var timeSeries = await _serviceScopeFactory.Send(new AddTimeSeriesRequest()
+        {
+            SymbolName = longSymbol,
+            Interval = interval
+        });
 
-        //await _serviceScopeFactory.Send(new UpdateTimeSeriesRequest() { TimeSeries = timeSeries });
+        await _serviceScopeFactory.Send(new UpdateTimeSeriesRequest() { TimeSeries = timeSeries });
 
 
         //var result = await _serviceScopeFactory.Services.CreateScope().ServiceProvider.GetRequiredService<StocksClient>().SearchSymbolAsync("DTE");
@@ -50,48 +86,19 @@ public class Playground : BackgroundService
             Interval = interval,
         });
 
-        //var buyAndHold = await _serviceScopeFactory.Send(new RunTradingStrategyRequest()
-        //{
-        //    Usd = 1000,
-        //    Strategy = new BuyAndHoldStrategy(),
-        //    Dataset = dataset
-        //});
+        var buyAndHold = await _serviceScopeFactory.Send(new RunTradingStrategyRequest()
+        {
+            Usd = 1000,
+            Strategy = new BuyAndHoldStrategy(),
+            Dataset = dataset
+        });
 
         var macd = await _serviceScopeFactory.Send(new RunTradingStrategyRequest()
         {
             Usd = 1000,
             Strategy = new MacdStrategy()
             {
-                //Macd = new Macd()
-                //{
-                //    Fast = 18,
-                //    Slow = 4,
-                //    Signal = 2
-                //}
-                //Macd = new Macd()
-                //{
-                //    Fast = 2,
-                //    Slow = 61,
-                //    Signal = 98
-                //}
-                Macd = new Macd()
-                {
-                    Fast = 23,
-                    Slow = 30,
-                    Signal = 3
-                }
-                //Macd = new Macd()
-                //{
-                //    Fast = 5,
-                //    Slow = 3,
-                //    Signal = 2
-                //}
-                //Macd = new Macd()
-                //{
-                //    Fast = 19,
-                //    Slow = 3,
-                //    Signal = 81
-                //}
+                Macd = macds[symbol]
             },
             Dataset = dataset
         });

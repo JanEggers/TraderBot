@@ -130,7 +130,7 @@ public static class Indicators
             yield return new Trend()
             {
                 Start = start,
-                Peak = peak,
+                Peak = relevantPoints.Last(),
                 Bottom = bottom,
             };
         }

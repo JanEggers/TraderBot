@@ -35,6 +35,7 @@ public class RunTradingStrategyRequestHandler : IRequestHandler<RunTradingStrate
         var trends = actions.Trends(request.Dataset.Quotes).ToList();
         foreach (var item in trends)
         {
+            item.Duration = item.Peak.Time - item.Start.Time;
             if (item.Bottom == item.Start)
             {
                 item.Volatility = (item.Peak.AdjustedClosingPrice / item.Start.AdjustedClosingPrice - 1) * 100;
@@ -61,7 +62,8 @@ public class RunTradingStrategyRequestHandler : IRequestHandler<RunTradingStrate
             Actions = actions,
             AverageDownTrendDuration = TimeSpan.FromTicks((long)trends.Select(t => t.Bottom.Time - t.Start.Time).Where(t => t.TotalDays > 0).Select(t => t.Ticks).Average()),
             TrendsUnsorted = trends,
-            Trends= trends.OrderBy(p => p.Volatility).ToList(),
+            TrendsByVolatility = trends.OrderBy(p => p.Volatility).ToList(),
+            TrendsByDuration = trends.OrderByDescending(p => p.Duration).ToList(),
             WorstTrend = trends.MinBy(p => p.Volatility),
             BestTrend = trends.MaxBy(p => p.Volatility)
         };
