@@ -1,15 +1,8 @@
-﻿using TraderBot.Extensions;
+﻿namespace TraderBot.Strategies;
 
-namespace TraderBot.Strategies;
-
-public class MacdStrategy : ITradingStrategy
+public class EmaStrategy : ITradingStrategy
 {
-    public Macd Macd { get; set; } = new Macd()
-    {
-        Fast = 2,
-        Slow = 50,
-        Signal = 30
-    };
+    public double Ema { get; set; } = 200;
 
     public List<TradingAction> Run(IReadOnlyDictionary<string, IReadOnlyList<StockDataPoint>> dataset, decimal usd)
     {
@@ -20,17 +13,14 @@ public class MacdStrategy : ITradingStrategy
 
         var start = (double)stockDataPoints[0].AdjustedClosingPrice;
 
-        var yesterdayMacd = new Macd()
-        {
-            Fast = start,
-            Slow = start,
-            Signal = start
-        };
+        var yesterdayEma = start;
+        var yesterdayPrice = start;
 
         foreach (var data in stockDataPoints)
         {
-            var macd = Indicators.Macd((double)data.AdjustedClosingPrice, Macd, yesterdayMacd);
-            if (macd.Signal < macd.Value && yesterdayMacd.Signal > yesterdayMacd.Value)
+            var price = (double)data.AdjustedClosingPrice;
+            var ema = Indicators.Ema(price, Ema, yesterdayEma);
+            if (price > ema && yesterdayEma > yesterdayPrice && usd > 0)
             {
                 buy = new TradingAction()
                 {
@@ -38,12 +28,13 @@ public class MacdStrategy : ITradingStrategy
                     Op = TradingAction.Operation.OpenBuy,
                     Stock = data,
                     Quantity = usd / data.AdjustedClosingPrice,
-                    Indicator = macd
+                    Indicator = ema
                 };
                 result.Add(buy);
+                usd = 0;
             }
 
-            if (macd.Signal > macd.Value && yesterdayMacd.Signal < yesterdayMacd.Value && buy != null)
+            if (ema < price && yesterdayEma < yesterdayPrice && buy != null)
             {
                 usd = buy.Quantity * data.AdjustedClosingPrice;
                 var sell = new TradingAction()
@@ -53,13 +44,14 @@ public class MacdStrategy : ITradingStrategy
                     Stock = data,
                     Quantity = buy.Quantity,
                     Diff = usd - buy.Usd,
-                    Indicator = macd
+                    Indicator = ema
                 };
                 result.Add(sell);
                 buy = null;
             }
 
-            yesterdayMacd = macd;
+            yesterdayEma = ema; 
+            yesterdayPrice = price;
         }
 
         if (buy != null)

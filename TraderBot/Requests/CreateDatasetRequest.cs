@@ -27,6 +27,11 @@ public class CreateDatasetRequestHanlder : IRequestHandler<CreateDatasetRequest,
 
         foreach (var symbol in request.Symbols)
         {
+            if (string.IsNullOrEmpty(symbol))
+            {
+                continue;
+            }
+
             var series = await _context.TimeSeries
                 .Include(p => p.Symbol)
                 .AsNoTracking()

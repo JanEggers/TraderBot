@@ -17,6 +17,8 @@ public class TradingAction
 
     public decimal Quantity { get; set; }
 
+    public object Indicator { get; set; }
+
     public override string ToString()
     {
         switch (Op)

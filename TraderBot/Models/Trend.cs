@@ -13,6 +13,6 @@ public class Trend
 
     public override string ToString()
     {
-        return $"{Start.Time} {Peak.Time} {Bottom.AdjustedClosingPrice} {Peak.AdjustedClosingPrice}";
+        return $"{Start.Time} {Peak.Time} {Bottom.AdjustedClosingPrice} {Peak.AdjustedClosingPrice} {Volatility}";
     }
 }
