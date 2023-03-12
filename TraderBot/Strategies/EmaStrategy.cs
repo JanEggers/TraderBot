@@ -34,7 +34,7 @@ public class EmaStrategy : ITradingStrategy
                 usd = 0;
             }
 
-            if (ema < price && yesterdayEma < yesterdayPrice && buy != null)
+            if (price < ema && buy != null)
             {
                 usd = buy.Quantity * data.AdjustedClosingPrice;
                 var sell = new TradingAction()

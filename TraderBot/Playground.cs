@@ -29,7 +29,7 @@ public class Playground : BackgroundService
             "DTE.DEX"   //buyandhold    6,3%/-40% // macd 19/3/81 9.6%/-31%
         };
 
-        var symbol = 6;
+        var symbol = 0;
         var shortS = -1;
 
         var macds = new Macd[]
@@ -74,13 +74,13 @@ public class Playground : BackgroundService
 
         var emas = new double[]
         {
-            2,  // 3,2%  / -21%
-            46, // 6,1%  / -25%
-            9,  // 12,2% / -36%
-            2,  // 6,7%  / -11%
-            41, // 5,5%  / -65%
-            37, // 3,9%  / -40%
-            2   // 6,7%  / -21%
+            197,  // 7,45%  / -14%
+            137, // 24,9%  / -19%
+            200,  // 26,9% / -30%
+            164,  // 6,1%  / -9,4%
+            200, // -3,6%  / -66%
+            123, // -17%  / -30%
+            2   // 3,1%  / -3,4%
         };
 
         var longSymbol = symbols[symbol];
@@ -138,6 +138,7 @@ public class Playground : BackgroundService
             Usd = 1000,
             Strategy = new EmaStrategy() {
                 Ema = emas[symbol]
+                //Ema = 200
             },
             Dataset = dataset
         });
