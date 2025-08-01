@@ -17,7 +17,7 @@ public class UpdateTimeSeriesRequestHandler : IRequestHandler<UpdateTimeSeriesRe
         this.stocksClient = stocksClient;
         this.logger = logger;
     }
-    public async Task<Unit> Handle(UpdateTimeSeriesRequest request, CancellationToken cancellationToken)
+    public async Task Handle(UpdateTimeSeriesRequest request, CancellationToken cancellationToken)
     {
         var series = await stocksClient.GetTimeSeriesAsync(request.TimeSeries.Symbol.Name,
             request.TimeSeries.Interval,
@@ -68,7 +68,5 @@ public class UpdateTimeSeriesRequestHandler : IRequestHandler<UpdateTimeSeriesRe
         lastUpdate = await tradingContext.StockDataPoints.OrderByDescending(p => p.Time).FirstOrDefaultAsync(cancellationToken);
 
         logger.LogInformation($"updated {request.TimeSeries.Symbol.Name} until {lastUpdate.Time}");
-
-        return Unit.Value;
     }
 }

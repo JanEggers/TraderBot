@@ -29,7 +29,7 @@ public class Playground : BackgroundService
             "DTE.DEX"   //buyandhold    6,3%/-40% // macd 19/3/81 9.6%/-31%
         };
 
-        var symbol = 0;
+        var symbol = 3;
         var shortS = -1;
 
         var macds = new Macd[]

@@ -13,9 +13,8 @@ public class MigrateDatabaseRequestHandler : IRequestHandler<MigrateDatabaseRequ
         this.tradingContext = tradingContext;
     }
 
-    public async Task<Unit> Handle(MigrateDatabaseRequest request, CancellationToken cancellationToken)
+    public async Task Handle(MigrateDatabaseRequest request, CancellationToken cancellationToken)
     {
         await tradingContext.Database.MigrateAsync(cancellationToken);
-        return Unit.Value;
     }
 }

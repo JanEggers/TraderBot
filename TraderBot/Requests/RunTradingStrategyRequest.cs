@@ -13,6 +13,7 @@ public class RunTradingStrategyRequestHandler : IRequestHandler<RunTradingStrate
 {
     public async Task<RunTradingStrategyResult> Handle(RunTradingStrategyRequest request, CancellationToken cancellationToken)
     {
+        await Task.Yield();
         var datapoints = request.Dataset.Quotes.Values.First();
         var actions = request.Strategy.Run(request.Dataset.Quotes, request.Usd);
         if (!actions.Any())

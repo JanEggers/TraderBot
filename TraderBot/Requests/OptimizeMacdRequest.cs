@@ -20,7 +20,7 @@ public class OptimizeMacdRequestHandler : IRequestHandler<OptimizeMacdRequest>
         _logger = logger;
     }
 
-    public async Task<Unit> Handle(OptimizeMacdRequest request, CancellationToken cancellationToken)
+    public async Task Handle(OptimizeMacdRequest request, CancellationToken cancellationToken)
     {
         RunTradingStrategyResult best = null;
         Macd bestmacd = null;
@@ -67,7 +67,5 @@ public class OptimizeMacdRequestHandler : IRequestHandler<OptimizeMacdRequest>
                 }
             }
         }
-
-        return Unit.Value;
     }
 }

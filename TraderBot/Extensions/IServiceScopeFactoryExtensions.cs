@@ -10,4 +10,13 @@ public static class IServiceScopeFactoryExtensions
 
         return await med.Send(request, cancellationToken);
     }
+
+    public static async Task Send(this IServiceScopeFactory services, IRequest request, CancellationToken cancellationToken = default)
+    {
+        using var scope = services.CreateScope();
+
+        var med = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+        await services.Send(request, cancellationToken);
+    }
 }

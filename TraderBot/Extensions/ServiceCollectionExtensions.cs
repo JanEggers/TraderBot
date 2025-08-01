@@ -19,7 +19,9 @@ public static class ServiceCollectionExtensions
             ctx.UseSqlite(db.ConnectionString);
             ctx.EnableSensitiveDataLogging();
         });
-        services.AddMediatR(typeof(TradingContext).Assembly);
+        services.AddMediatR(mediatr => {
+            mediatr.RegisterServicesFromAssembly(typeof(TradingContext).Assembly);
+        });
 
         services.AddScoped((c) => new AlphaVantageClient(apiKey));
         services.AddScoped((c) => c.GetRequiredService<AlphaVantageClient>().Stocks());

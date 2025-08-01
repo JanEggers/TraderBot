@@ -20,7 +20,7 @@ public class OptimizeEmaRequestHandler : IRequestHandler<OptimizeEmaRequest>
         _logger = logger;
     }
 
-    public async Task<Unit> Handle(OptimizeEmaRequest request, CancellationToken cancellationToken)
+    public async Task Handle(OptimizeEmaRequest request, CancellationToken cancellationToken)
     {
         RunTradingStrategyResult best = null;
         double bestema = 0;
@@ -56,7 +56,5 @@ public class OptimizeEmaRequestHandler : IRequestHandler<OptimizeEmaRequest>
                 }
             }
         }
-
-        return Unit.Value;
     }
 }
