@@ -1,4 +1,6 @@
-﻿namespace TraderBot.Requests;
+﻿using TraderBot.Models;
+
+namespace TraderBot.Requests;
 
 public class UpdateTimeSeriesRequest : IRequest
 {
@@ -23,34 +25,38 @@ public class UpdateTimeSeriesRequestHandler : IRequestHandler<UpdateTimeSeriesRe
         {
             Symbol = request.TimeSeries.Symbol.Name,
             OutputSize = TimeSeriesOutputSize.Full,
-
         }, cancellationToken);
-        
-        var lastUpdate = await tradingContext.StockDataPoints
-            .Where(p => p.TimeSeriesId == request.TimeSeries.Id)
-            .OrderByDescending(p => p.Time)
-            .FirstOrDefaultAsync(cancellationToken);
 
-        var newPoints = series.AsEnumerable();
 
-        if (lastUpdate != null)
+        tradingContext.StockDataPoints.RemoveRange(tradingContext.StockDataPoints
+            .Where(p => p.TimeSeriesId == request.TimeSeries.Id));
+
+        var lastCLose = 0.0;
+        var multiplier = 1;
+
+
+        foreach (var item in series.OrderBy(s => s.Timestamp))
         {
-            newPoints = newPoints.Where(p => p.Timestamp > lastUpdate.Time);
-        }
+            var close = (double?)(item.Close) ?? 0.0;
 
-        newPoints = newPoints.OrderBy(p => p.Timestamp);
+            var compare = (lastCLose / 1.9);
 
-        foreach (var item in newPoints)
-        {
+            if (lastCLose > 0 && close < compare)
+            {
+                multiplier *= 2;
+            }
+
+            lastCLose = close;
+
             var dp = new StockDataPoint()
             {
                 TimeSeriesId = request.TimeSeries.Id,
                 Time = item.Timestamp,
                 OpeningPrice = item.Open ?? (decimal)0.0,
-                ClosingPrice = item.Close ?? (decimal)0.0,
+                ClosingPrice = (decimal)close,
                 HighestPrice = item.High ?? (decimal)0.0,
                 LowestPrice = item.Low ?? (decimal)0.0,
-                AdjustedClosingPrice = item.Close ?? (decimal)0.0,
+                AdjustedClosingPrice = (decimal)close * multiplier,
                 Volume = item.Volume ?? 0
             };
 
@@ -59,7 +65,7 @@ public class UpdateTimeSeriesRequestHandler : IRequestHandler<UpdateTimeSeriesRe
 
         await tradingContext.SaveChangesAsync(cancellationToken);
 
-        lastUpdate = await tradingContext.StockDataPoints.OrderByDescending(p => p.Time).FirstOrDefaultAsync(cancellationToken);
+        var lastUpdate = await tradingContext.StockDataPoints.OrderByDescending(p => p.Time).FirstOrDefaultAsync(cancellationToken);
 
         logger.LogInformation($"updated {request.TimeSeries.Symbol.Name} until {lastUpdate.Time}");
     }

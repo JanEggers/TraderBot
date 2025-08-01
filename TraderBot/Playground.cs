@@ -29,7 +29,7 @@ public class Playground : BackgroundService
             "DTE.DEX"   //buyandhold    6,3%/-40% // macd 19/3/81 9.6%/-31%
         };
 
-        var symbol = 3;
+        var symbol = 2;
         var shortS = -1;
 
         var macds = new Macd[]
@@ -96,39 +96,39 @@ public class Playground : BackgroundService
 
         //var result = await _serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<StocksClient>().SearchSymbolAsync(symbols[symbol]);
 
-        var dataset = await _serviceScopeFactory.Send(new CreateDatasetRequest()
-        {
-            Symbols = new List<string> { longSymbol, shortSymbol },
-        });
+        //var dataset = await _serviceScopeFactory.Send(new CreateDatasetRequest()
+        //{
+        //    Symbols = new List<string> { longSymbol, shortSymbol },
+        //});
 
-        var buyAndHold = await _serviceScopeFactory.Send(new RunTradingStrategyRequest()
-        {
-            Usd = 1000,
-            Strategy = new BuyAndHoldStrategy(),
-            Dataset = dataset
-        });
+        //var buyAndHold = await _serviceScopeFactory.Send(new RunTradingStrategyRequest()
+        //{
+        //    Usd = 1000,
+        //    Strategy = new BuyAndHoldStrategy(),
+        //    Dataset = dataset
+        //});
 
-        var buyAndHoldTrends = await _serviceScopeFactory.Send(new AnalyseTrendsRequest()
-        {
-            StrategyResults = buyAndHold,
-            Dataset = dataset
-        });
+        //var buyAndHoldTrends = await _serviceScopeFactory.Send(new AnalyseTrendsRequest()
+        //{
+        //    StrategyResults = buyAndHold,
+        //    Dataset = dataset
+        //});
 
-        var macd = await _serviceScopeFactory.Send(new RunTradingStrategyRequest()
-        {
-            Usd = 1000,
-            Strategy = new MacdStrategy()
-            {
-                Macd = macds[symbol]
-            },
-            Dataset = dataset
-        });
+        //var macd = await _serviceScopeFactory.Send(new RunTradingStrategyRequest()
+        //{
+        //    Usd = 1000,
+        //    Strategy = new MacdStrategy()
+        //    {
+        //        Macd = macds[symbol]
+        //    },
+        //    Dataset = dataset
+        //});
 
-        var macdTrends = await _serviceScopeFactory.Send(new AnalyseTrendsRequest()
-        {
-            StrategyResults = macd,
-            Dataset = dataset
-        });
+        //var macdTrends = await _serviceScopeFactory.Send(new AnalyseTrendsRequest()
+        //{
+        //    StrategyResults = macd,
+        //    Dataset = dataset
+        //});
 
         //var ema = await _serviceScopeFactory.Send(new RunTradingStrategyRequest()
         //{
@@ -164,10 +164,10 @@ public class Playground : BackgroundService
         //    Dataset = dataset
         //});
 
-        await _serviceScopeFactory.Send(new OptimizeMacdRequest() 
-        {
-            Dataset = dataset
-        });
+        //await _serviceScopeFactory.Send(new OptimizeMacdRequest() 
+        //{
+        //    Dataset = dataset
+        //});
 
 
         //var macdWithHedge = await _serviceScopeFactory.Send(new RunTradingStrategyRequest()

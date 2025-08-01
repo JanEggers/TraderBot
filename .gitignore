@@ -365,4 +365,4 @@ FodyWeavers.xsd
 /TraderBot/Data.db
 /TraderBot/Data.db-shm
 /TraderBot/Data.db-wal
-/TraderBot/wwwroot/lib/chartjs
+/TraderBot/wwwroot/lib/

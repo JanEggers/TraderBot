@@ -1,0 +1,72 @@
+﻿@page
+@model TraderBot.Pages.IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<h1>Home</h1>
+
+<canvas id="myChart"></canvas>
+
+
+<script>
+    /*
+    We use Razor to inject the data from the Model into the JavaScript to set the initial state.
+    All future updates are handled by HTMX via the hx-get attributes on the buttons, which call
+    the OnGetUpdate page handler (manifested as &handler=Update in the query string) to get
+    the next page of data. Client side state (HTML elements) are passed to the server mimicking HATEOAS.
+    */
+    document.addEventListener('DOMContentLoaded', (event) => {
+        const ctx = document.getElementById('myChart');
+        const myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'closing price',
+                    data: @Html.Raw(this.Model.ClosingPrice),
+                    borderWidth: 1,
+                    yAxisID: 'y',
+                },{
+                    label: 'portfolio value buy and hold',
+                    data: @Html.Raw(this.Model.PortfolioValueBuyAndHold),
+                    borderWidth: 1,
+                    yAxisID: 'y1'
+                },{
+                    label: 'portfolio value macd',
+                    data: @Html.Raw(this.Model.PortfolioValueMacd),
+                    borderWidth: 1,
+                    yAxisID: 'y1'
+                }]
+            },
+            options: {
+
+                scales: {
+                  y: {
+                    type: 'linear',
+                    display: true,
+                    beginAtZero: true,
+                    position: 'left',
+                  },
+                  y1: {
+                    type: 'linear',
+                    display: true,
+                    beginAtZero: true,
+                    position: 'right',
+
+                    // grid line settings
+                    grid: {
+                      drawOnChartArea: false, // only want the grid lines for one axis to show up
+                    },
+                  },
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'lala'
+                    }
+                }
+            }
+        });
+    });
+</script>
+
