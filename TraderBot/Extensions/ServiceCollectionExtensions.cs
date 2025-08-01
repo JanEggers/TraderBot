@@ -1,5 +1,4 @@
-﻿using AlphaVantage.Net.Core.Client;
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
 using System.IO;
 
 namespace TraderBot.Extensions;
@@ -23,8 +22,11 @@ public static class ServiceCollectionExtensions
             mediatr.RegisterServicesFromAssembly(typeof(TradingContext).Assembly);
         });
 
-        services.AddScoped((c) => new AlphaVantageClient(apiKey));
-        services.AddScoped((c) => c.GetRequiredService<AlphaVantageClient>().Stocks());
+        services.AddAlphaVantageClient(alphaVantage => 
+        {
+            alphaVantage.ApiKey = apiKey;
+            alphaVantage.MaxApiCallsPerMinute = 100;
+        });
 
         return services;
     }

@@ -21,15 +21,6 @@ public class TradingContext : DbContext
             p.Time
         }).IsUnique();
 
-
-        modelBuilder.Entity<TimeSeries>().Property(p => p.Interval).HasConversion<string>();
-
-        modelBuilder.Entity<TimeSeries>().HasIndex(p => new
-        {
-            p.SymbolId,
-            p.Interval
-        }).IsUnique();
-
         modelBuilder.Entity<Symbol>().HasIndex(p => new
         {
             p.Name,

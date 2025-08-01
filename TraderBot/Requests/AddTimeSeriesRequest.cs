@@ -3,8 +3,6 @@
 public class AddTimeSeriesRequest : IRequest<TimeSeries>
 {
     public string SymbolName { get; set; }
-
-    public AlphaVantage.Net.Common.Intervals.Interval Interval { get; set; }
 }
 
 public class AddTimeSeriesRequestHandler : IRequestHandler<AddTimeSeriesRequest, TimeSeries>
@@ -29,13 +27,12 @@ public class AddTimeSeriesRequestHandler : IRequestHandler<AddTimeSeriesRequest,
             tradingContext.Symbols.Add(symbol);
         }
 
-        var dailySeries = symbol.TimeSeries.FirstOrDefault(s => s.Interval == request.Interval);
+        var dailySeries = symbol.TimeSeries.FirstOrDefault();
         if (dailySeries == null)
         {
             dailySeries = new TimeSeries()
             {
                 Symbol = symbol,
-                Interval = request.Interval
             };
             symbol.TimeSeries.Add(dailySeries);
         }

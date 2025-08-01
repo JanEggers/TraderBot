@@ -16,7 +16,8 @@ global using Microsoft.Extensions.Logging;
 
 global using MediatR;
 
-global using AlphaVantage.Net.Stocks.Client;
+global using AlphaVantage;
+global using AlphaVantage.Stocks;
 
 global using TraderBot;
 global using TraderBot.Contracts;

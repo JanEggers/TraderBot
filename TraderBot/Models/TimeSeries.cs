@@ -10,7 +10,5 @@ public class TimeSeries
     public int SymbolId { get; set; }
     public Symbol Symbol { get; set; }
 
-    public AlphaVantage.Net.Common.Intervals.Interval Interval { get; set; }
-
     public ICollection<StockDataPoint> DataPoints { get; set; }
 }

@@ -17,6 +17,6 @@ public static class IServiceScopeFactoryExtensions
 
         var med = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-        await services.Send(request, cancellationToken);
+        await med.Send(request, cancellationToken);
     }
 }

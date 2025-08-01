@@ -6,8 +6,6 @@ public class CreateDatasetRequest : IRequest<Dataset>
 {
     public List<string> Symbols { get; set; }
 
-    public AlphaVantage.Net.Common.Intervals.Interval Interval { get; set; }
-
     public DateTime? Start { get; set; }
     public DateTime? End { get; set; }
 }
@@ -35,11 +33,11 @@ public class CreateDatasetRequestHanlder : IRequestHandler<CreateDatasetRequest,
             var series = await _context.TimeSeries
                 .Include(p => p.Symbol)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.Symbol.Name == symbol && p.Interval == request.Interval, cancellationToken);
+                .FirstOrDefaultAsync(p => p.Symbol.Name == symbol, cancellationToken);
 
             if (series == null)
             {
-                throw new InvalidOperationException($"no series was found for symbol {symbol} with interval {request.Interval}");
+                throw new InvalidOperationException($"no series was found for symbol {symbol}");
             }
 
             var data = _context.StockDataPoints

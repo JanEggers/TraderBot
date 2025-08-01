@@ -8,10 +8,10 @@ public class UpdateTimeSeriesRequest : IRequest
 public class UpdateTimeSeriesRequestHandler : IRequestHandler<UpdateTimeSeriesRequest>
 {
     private readonly TradingContext tradingContext;
-    private readonly StocksClient stocksClient;
+    private readonly AlphaVantageClient stocksClient;
     private readonly ILogger<UpdateTimeSeriesRequestHandler> logger;
 
-    public UpdateTimeSeriesRequestHandler(TradingContext tradingContext, StocksClient stocksClient, ILogger<UpdateTimeSeriesRequestHandler> logger)
+    public UpdateTimeSeriesRequestHandler(TradingContext tradingContext, AlphaVantageClient stocksClient, ILogger<UpdateTimeSeriesRequestHandler> logger)
     {
         this.tradingContext = tradingContext;
         this.stocksClient = stocksClient;
@@ -19,46 +19,40 @@ public class UpdateTimeSeriesRequestHandler : IRequestHandler<UpdateTimeSeriesRe
     }
     public async Task Handle(UpdateTimeSeriesRequest request, CancellationToken cancellationToken)
     {
-        var series = await stocksClient.GetTimeSeriesAsync(request.TimeSeries.Symbol.Name,
-            request.TimeSeries.Interval,
-            AlphaVantage.Net.Common.Size.OutputSize.Full, isAdjusted: true);
+        var series = await stocksClient.GetDailyTimeSeries(new DailyTimeSeriesRequest()
+        {
+            Symbol = request.TimeSeries.Symbol.Name,
+            OutputSize = TimeSeriesOutputSize.Full,
+
+        }, cancellationToken);
         
         var lastUpdate = await tradingContext.StockDataPoints
             .Where(p => p.TimeSeriesId == request.TimeSeries.Id)
             .OrderByDescending(p => p.Time)
             .FirstOrDefaultAsync(cancellationToken);
 
-        var newPoints = series.DataPoints.AsEnumerable();
+        var newPoints = series.AsEnumerable();
 
         if (lastUpdate != null)
         {
-            newPoints = newPoints.Where(p => p.Time > lastUpdate.Time);
+            newPoints = newPoints.Where(p => p.Timestamp > lastUpdate.Time);
         }
 
-        newPoints = newPoints.OrderBy(p => p.Time);
+        newPoints = newPoints.OrderBy(p => p.Timestamp);
 
         foreach (var item in newPoints)
         {
             var dp = new StockDataPoint()
             {
                 TimeSeriesId = request.TimeSeries.Id,
-                Time = item.Time,
-                OpeningPrice = item.OpeningPrice,
-                ClosingPrice = item.ClosingPrice,
-                HighestPrice = item.HighestPrice,
-                LowestPrice = item.LowestPrice,
-                AdjustedClosingPrice = item.ClosingPrice,
-                Volume = item.Volume
+                Time = item.Timestamp,
+                OpeningPrice = item.Open ?? (decimal)0.0,
+                ClosingPrice = item.Close ?? (decimal)0.0,
+                HighestPrice = item.High ?? (decimal)0.0,
+                LowestPrice = item.Low ?? (decimal)0.0,
+                AdjustedClosingPrice = item.Close ?? (decimal)0.0,
+                Volume = item.Volume ?? 0
             };
-
-            switch (item)
-            {
-                case AlphaVantage.Net.Stocks.StockAdjustedDataPoint adjusted:
-                    dp.AdjustedClosingPrice = adjusted.AdjustedClosingPrice;
-                    break;
-                default:
-                    break;
-            }
 
             tradingContext.Add(dp);
         }
