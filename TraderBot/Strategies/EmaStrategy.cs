@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Runtime.Intrinsics.X86;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+﻿using TraderBot.Models;
 
 namespace TraderBot.Strategies;
 
@@ -35,6 +33,7 @@ public class EmaStrategy : ITradingStrategy
 
             yesterdayEma = ema; 
             yesterdayPrice = price;
+            portfolio = portfolio.Updatevalue(dataset, data.Time);
         }
 
         if (buy != null)

@@ -44,9 +44,9 @@ public class IndexModel : PageModel
             Dataset = dataset
         });
 
-        points = buyAndHold.Portfolio.Actions.Select(a =>
+        points = buyAndHold.Portfolio.Value.Select(a =>
         {
-            return new DataPoint(DateOnly.FromDateTime(a.Stock.Time), a.Usd);
+            return new DataPoint(DateOnly.FromDateTime(a.Timestamp), a.Usd);
         }).ToList();
         this.PortfolioValueBuyAndHold = JsonSerializer.Serialize(points, options: new JsonSerializerOptions(JsonSerializerDefaults.Web));
 
@@ -67,9 +67,10 @@ public class IndexModel : PageModel
             Dataset = dataset
         });
 
-        points = macd.Portfolio.Actions.Select(a =>
+
+        points = macd.Portfolio.Value.Select(a =>
         {
-            return new DataPoint(DateOnly.FromDateTime(a.Stock.Time), a.Usd);
+            return new DataPoint(DateOnly.FromDateTime(a.Timestamp), a.Usd);
         }).ToList();
         this.PortfolioValueMacd = JsonSerializer.Serialize(points, options: new JsonSerializerOptions(JsonSerializerDefaults.Web));
     }

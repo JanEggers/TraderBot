@@ -9,9 +9,12 @@ public class BuyAndHoldStrategy : ITradingStrategy
         var last = datapoints.Last();
 
         (portfolio, var buy) = portfolio.Buy(portfolio.Usd, first, null);
-
+        foreach (var datapoint in datapoints)
+        {
+            portfolio = portfolio.Updatevalue(dataset, datapoint.Time);
+        }
         portfolio = portfolio.Sell(buy.Quantity, last, null);
-
+        
         return portfolio;
     }
 }

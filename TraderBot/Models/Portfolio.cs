@@ -1,6 +1,4 @@
 ﻿using System.Collections.Immutable;
-using TraderBot.Extensions;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TraderBot.Models;
 
@@ -9,6 +7,7 @@ public record Portfolio
     public decimal Usd { get; init; }
 
     public ImmutableList<TradingAction> Actions { get; init; } = ImmutableList<TradingAction>.Empty;
+    public ImmutableList<PortfolioValue> Value { get; init; } = ImmutableList<PortfolioValue>.Empty;
 
     public ImmutableDictionary<string, decimal> Stocks { get; init; } = ImmutableDictionary<string, decimal>.Empty;
 
@@ -24,7 +23,7 @@ public record Portfolio
             Indicator = indicator
         };
 
-        return (new Portfolio()
+        return (this with
         {
             Usd = Usd - usd,
             Actions = Actions.Add(buy),
@@ -44,7 +43,7 @@ public record Portfolio
             Indicator = indicator
         }; 
         
-        return new Portfolio()
+        return this with
         {
             Usd = Usd + usd,
             Actions = Actions.Add(sell),
@@ -52,6 +51,21 @@ public record Portfolio
         };
     }
 
+    public Portfolio Updatevalue(IReadOnlyDictionary<string, IReadOnlyList<StockDataPoint>> dataset, DateTime timestamp) 
+    {
+        var value = Usd;
 
+        value += Stocks.Sum(s =>
+        {
+            var point = dataset[s.Key].First(p => p.Time == timestamp);
+            return point.AdjustedClosingPrice * s.Value;
+        });
+
+
+        return this with
+        {
+            Value = Value.Add(new PortfolioValue() { Usd = value, Timestamp = timestamp })
+        };
+    }
 
 }

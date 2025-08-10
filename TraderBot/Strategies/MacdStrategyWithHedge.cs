@@ -89,6 +89,7 @@ public class MacdStrategyWithHedge : ITradingStrategy
             }
 
             yesterdayMacdLong = macdLong;
+            portfolio = portfolio.Updatevalue(dataset, data.Time);
         }
 
         if (buyLong != null)

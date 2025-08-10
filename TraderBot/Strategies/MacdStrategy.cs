@@ -38,6 +38,7 @@ public class MacdStrategy : ITradingStrategy
             }
 
             yesterdayMacd = macd;
+            portfolio = portfolio.Updatevalue(dataset, data.Time);
         }
 
         if (buy != null)
