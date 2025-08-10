@@ -61,10 +61,20 @@ public record Portfolio
             return point.AdjustedClosingPrice * s.Value;
         });
 
+        var lastPeak = Value.LastOrDefault()?.LastPeak ?? (decimal)0.0;
+
+        var isPeak = value > lastPeak;
+
 
         return this with
         {
-            Value = Value.Add(new PortfolioValue() { Usd = value, Timestamp = timestamp })
+            Value = Value.Add(new PortfolioValue() 
+            {
+                Usd = value, 
+                Timestamp = timestamp,
+                Volatility = isPeak ? 1 : value / lastPeak,
+                LastPeak = isPeak ? value : lastPeak
+            })
         };
     }
 

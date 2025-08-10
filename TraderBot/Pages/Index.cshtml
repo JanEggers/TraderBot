@@ -32,10 +32,20 @@
                     borderWidth: 1,
                     yAxisID: 'y1'
                 },{
+                    label: 'portfolio value buy and hold (vola)',
+                    data: @Html.Raw(this.Model.PortfolioValueBuyAndHoldVola),
+                    borderWidth: 1,
+                    yAxisID: 'y2'
+                },{
                     label: 'portfolio value macd',
                     data: @Html.Raw(this.Model.PortfolioValueMacd),
                     borderWidth: 1,
                     yAxisID: 'y1'
+                },{
+                    label: 'portfolio value macd (vola)',
+                    data: @Html.Raw(this.Model.PortfolioValueMacdVola),
+                    borderWidth: 1,
+                    yAxisID: 'y2'
                 }]
             },
             options: {
@@ -48,6 +58,17 @@
                     position: 'left',
                   },
                   y1: {
+                    type: 'linear',
+                    display: true,
+                    beginAtZero: true,
+                    position: 'right',
+
+                    // grid line settings
+                    grid: {
+                      drawOnChartArea: false, // only want the grid lines for one axis to show up
+                    },
+                  },
+                  y2: {
                     type: 'linear',
                     display: true,
                     beginAtZero: true,

@@ -12,7 +12,9 @@ public class IndexModel : PageModel
 
     public string ClosingPrice { get; set; } = string.Empty;
     public string PortfolioValueBuyAndHold { get; set; } = string.Empty;
+    public string PortfolioValueBuyAndHoldVola { get; set; } = string.Empty;
     public string PortfolioValueMacd { get; set; } = string.Empty;
+    public string PortfolioValueMacdVola { get; set; } = string.Empty;
 
     public IndexModel(ILogger<IndexModel> logger, IServiceScopeFactory serviceScopeFactory)
     {
@@ -50,6 +52,12 @@ public class IndexModel : PageModel
         }).ToList();
         this.PortfolioValueBuyAndHold = JsonSerializer.Serialize(points, options: new JsonSerializerOptions(JsonSerializerDefaults.Web));
 
+        points = buyAndHold.Portfolio.Value.Select(a =>
+        {
+            return new DataPoint(DateOnly.FromDateTime(a.Timestamp), a.Volatility);
+        }).ToList();
+        this.PortfolioValueBuyAndHoldVola = JsonSerializer.Serialize(points, options: new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
 
 
         var macd = await _serviceScopeFactory.Send(new RunTradingStrategyRequest()
@@ -73,5 +81,12 @@ public class IndexModel : PageModel
             return new DataPoint(DateOnly.FromDateTime(a.Timestamp), a.Usd);
         }).ToList();
         this.PortfolioValueMacd = JsonSerializer.Serialize(points, options: new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+
+        points = macd.Portfolio.Value.Select(a =>
+        {
+            return new DataPoint(DateOnly.FromDateTime(a.Timestamp), a.Volatility);
+        }).ToList();
+        this.PortfolioValueMacdVola = JsonSerializer.Serialize(points, options: new JsonSerializerOptions(JsonSerializerDefaults.Web));
     }
 }
