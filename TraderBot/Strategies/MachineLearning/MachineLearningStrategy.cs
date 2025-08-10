@@ -4,11 +4,9 @@ namespace TraderBot.Strategies.MachineLearning;
 
 public class MachineLearningStrategy : ITradingStrategy
 {
-    public List<TradingAction> Run(IReadOnlyDictionary<string, IReadOnlyList<StockDataPoint>> dataset, decimal usd)
+    public Portfolio Run(IReadOnlyDictionary<string, IReadOnlyList<StockDataPoint>> dataset, Portfolio portfolio)
     {
         var stockDataPoints = dataset.Values.First();
-        var result = new List<TradingAction>();
-
 
         var mlContext = new MLContext();
 
@@ -36,6 +34,6 @@ public class MachineLearningStrategy : ITradingStrategy
 
         //IDataView predictions = model.Transform(testData);
 
-        return result;
+        return portfolio;
     }
 }

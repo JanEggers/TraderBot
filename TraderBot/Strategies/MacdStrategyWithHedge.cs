@@ -20,15 +20,13 @@ public class MacdStrategyWithHedge : ITradingStrategy
 
     public string ShortSymbol { get; set; }
 
-    public List<TradingAction> Run(IReadOnlyDictionary<string, IReadOnlyList<StockDataPoint>> dataset, decimal usd)
+    public Portfolio Run(IReadOnlyDictionary<string, IReadOnlyList<StockDataPoint>> dataset, Portfolio portfolio)
     {
         var longDataPoints = dataset[LongSymbol];
         var shortDataPointsByTime = dataset[ShortSymbol].ToDictionary(p => p.Time);
 
         TradingAction buyLong = null;
         TradingAction buyShort = null;
-
-        var result = new List<TradingAction>();
 
         var start = (double)longDataPoints[0].AdjustedClosingPrice;
 
@@ -56,16 +54,7 @@ public class MacdStrategyWithHedge : ITradingStrategy
             if (buyShort != null && data.Time.Subtract(buyShort.Stock.Time) > System.TimeSpan.FromDays(2))
             {
                 var shortData = shortDataPointsByTime[data.Time];
-                usd = buyShort.Quantity * shortData.AdjustedClosingPrice;
-                var sell = new TradingAction()
-                {
-                    Usd = usd,
-                    Op = TradingAction.Operation.CloseBuy,
-                    Stock = shortData,
-                    Quantity = buyShort.Quantity,
-                    Diff = usd - buyShort.Usd
-                };
-                result.Add(sell);
+                portfolio = portfolio.Sell(buyShort.Quantity, shortData, macdShort);
                 buyShort = null;
                 blockShorts = true;
             }
@@ -74,28 +63,11 @@ public class MacdStrategyWithHedge : ITradingStrategy
             {
                 if (buyShort != null)
                 {
-                    var shortData = shortDataPointsByTime[data.Time];
-                    usd = buyShort.Quantity * shortData.AdjustedClosingPrice;
-                    var sell = new TradingAction()
-                    {
-                        Usd = usd,
-                        Op = TradingAction.Operation.CloseBuy,
-                        Stock = shortData,
-                        Quantity = buyShort.Quantity,
-                        Diff = usd - buyShort.Usd
-                    };
-                    result.Add(sell);
+                    portfolio = portfolio.Sell(buyShort.Quantity, shortDataPointsByTime[data.Time], macdShort);
                     buyShort = null;
                 }
 
-                buyLong = new TradingAction()
-                {
-                    Usd = usd,
-                    Op = TradingAction.Operation.OpenBuy,
-                    Stock = data,
-                    Quantity = usd / data.AdjustedClosingPrice
-                };
-                result.Add(buyLong);
+                (portfolio, buyLong) = portfolio.Buy(portfolio.Usd, data, macdLong);
                 blockShorts = false;
             }
 
@@ -105,31 +77,14 @@ public class MacdStrategyWithHedge : ITradingStrategy
                 {
                     if (buyLong != null)
                     {
-                        usd = buyLong.Quantity * data.AdjustedClosingPrice;
-                        var sell = new TradingAction()
-                        {
-                            Usd = usd,
-                            Op = TradingAction.Operation.CloseBuy,
-                            Stock = data,
-                            Quantity = buyLong.Quantity,
-                            Diff = usd - buyLong.Usd
-                        };
-                        result.Add(sell);
+                        portfolio = portfolio.Sell(buyLong.Quantity, data, macdLong);
                         buyLong = null;
                     }
                 }
                 
                 if (shortDataPointsByTime.TryGetValue(data.Time, out var shortData) && buyShort == null && !blockShorts)
                 {
-                    buyShort = new TradingAction()
-                    {
-                        Usd = usd,
-                        Op = TradingAction.Operation.OpenBuy,
-                        Stock = shortData,
-                        Quantity = usd / shortData.AdjustedClosingPrice
-                    };
-
-                    result.Add(buyShort);
+                    (portfolio, buyShort) = portfolio.Buy(portfolio.Usd, shortData, macdLong);
                 }
             }
 
@@ -139,32 +94,15 @@ public class MacdStrategyWithHedge : ITradingStrategy
         if (buyLong != null)
         {
             var last = longDataPoints.Last();
-            usd = buyLong.Quantity * last.AdjustedClosingPrice;
-            var sell = new TradingAction()
-            {
-                Usd = usd,
-                Op = TradingAction.Operation.CloseBuy,
-                Stock = last,
-                Quantity = buyLong.Quantity
-            };
-            result.Add(sell);
+            portfolio = portfolio.Sell(buyShort.Quantity, last, null);
         }
 
         if (buyShort != null)
         {
             var shortData = shortDataPointsByTime[longDataPoints.Last().Time];
-            usd = buyShort.Quantity * shortData.AdjustedClosingPrice;
-            var sell = new TradingAction()
-            {
-                Usd = usd,
-                Op = TradingAction.Operation.CloseBuy,
-                Stock = shortData,
-                Quantity = buyShort.Quantity,
-                Diff = usd - buyShort.Usd
-            };
-            result.Add(sell);
+            portfolio = portfolio.Sell(buyShort.Quantity, shortData, null);
         }
 
-        return result;
+        return portfolio;
     }
 }

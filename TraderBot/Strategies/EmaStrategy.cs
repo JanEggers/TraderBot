@@ -1,15 +1,17 @@
-﻿namespace TraderBot.Strategies;
+﻿using System.Collections.Generic;
+using System.Runtime.Intrinsics.X86;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+
+namespace TraderBot.Strategies;
 
 public class EmaStrategy : ITradingStrategy
 {
     public double Ema { get; set; } = 200;
 
-    public List<TradingAction> Run(IReadOnlyDictionary<string, IReadOnlyList<StockDataPoint>> dataset, decimal usd)
+    public Portfolio Run(IReadOnlyDictionary<string, IReadOnlyList<StockDataPoint>> dataset, Portfolio portfolio)
     {
         var stockDataPoints = dataset.Values.First();
         TradingAction buy = null;
-
-        var result = new List<TradingAction>();
 
         var start = (double)stockDataPoints[0].AdjustedClosingPrice;
 
@@ -20,33 +22,14 @@ public class EmaStrategy : ITradingStrategy
         {
             var price = (double)data.AdjustedClosingPrice;
             var ema = Indicators.Ema(price, Ema, yesterdayEma);
-            if (price > ema && yesterdayEma > yesterdayPrice && usd > 0)
+            if (price > ema && yesterdayEma > yesterdayPrice && portfolio.Usd > 0)
             {
-                buy = new TradingAction()
-                {
-                    Usd = usd,
-                    Op = TradingAction.Operation.OpenBuy,
-                    Stock = data,
-                    Quantity = usd / data.AdjustedClosingPrice,
-                    Indicator = ema
-                };
-                result.Add(buy);
-                usd = 0;
+                (portfolio, buy) = portfolio.Buy(portfolio.Usd, data, ema);
             }
 
             if (price < ema && buy != null)
             {
-                usd = buy.Quantity * data.AdjustedClosingPrice;
-                var sell = new TradingAction()
-                {
-                    Usd = usd,
-                    Op = TradingAction.Operation.CloseBuy,
-                    Stock = data,
-                    Quantity = buy.Quantity,
-                    Diff = usd - buy.Usd,
-                    Indicator = ema
-                };
-                result.Add(sell);
+                portfolio = portfolio.Sell(buy.Quantity, data, ema);
                 buy = null;
             }
 
@@ -57,17 +40,9 @@ public class EmaStrategy : ITradingStrategy
         if (buy != null)
         {
             var last = stockDataPoints.Last();
-            usd = buy.Quantity * last.AdjustedClosingPrice;
-            var sell = new TradingAction()
-            {
-                Usd = usd,
-                Op = TradingAction.Operation.CloseBuy,
-                Stock = last,
-                Quantity = buy.Quantity
-            };
-            result.Add(sell);
+            portfolio = portfolio.Sell(buy.Quantity, last, null);
         }
 
-        return result;
+        return portfolio;
     }
 }

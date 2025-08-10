@@ -37,7 +37,7 @@ public class OptimizeEmaRequestHandler : IRequestHandler<OptimizeEmaRequest>
         {
             var macd = await _serviceScopeFactory.Send(new RunTradingStrategyRequest()
             {
-                Usd = 1000,
+                Portfolio = new Portfolio() { Usd = 1000 },
                 Strategy = strategy,
                 Dataset = request.Dataset
             });
@@ -46,13 +46,13 @@ public class OptimizeEmaRequestHandler : IRequestHandler<OptimizeEmaRequest>
 
         foreach (var macd in results)
         {
-            if (best == null || best.Usd < macd.Usd)
+            if (best == null || best.Portfolio.Usd < macd.Portfolio.Usd)
             {
-                if (macd.Actions.Count > 0)
+                if (macd.Portfolio.Actions.Count > 0)
                 {
                     bestema = ((EmaStrategy)macd.Strategy).Ema;
                     best = macd;
-                    _logger.LogInformation($"new best {bestema} {best.Usd} {best.YearlyReturnPercentage}");
+                    _logger.LogInformation($"new best {bestema} {best.Portfolio.Usd} {best.YearlyReturnPercentage}");
                 }
             }
         }

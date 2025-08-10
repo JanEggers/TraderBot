@@ -1,6 +1,4 @@
-﻿using TraderBot.Extensions;
-
-namespace TraderBot.Strategies;
+﻿namespace TraderBot.Strategies;
 
 public class MacdStrategy : ITradingStrategy
 {
@@ -11,12 +9,10 @@ public class MacdStrategy : ITradingStrategy
         Signal = 30
     };
 
-    public List<TradingAction> Run(IReadOnlyDictionary<string, IReadOnlyList<StockDataPoint>> dataset, decimal usd)
+    public Portfolio Run(IReadOnlyDictionary<string, IReadOnlyList<StockDataPoint>> dataset, Portfolio portfolio)
     {
         var stockDataPoints = dataset.Values.First();
         TradingAction buy = null;
-
-        var result = new List<TradingAction>();
 
         var start = (double)stockDataPoints[0].AdjustedClosingPrice;
 
@@ -32,30 +28,12 @@ public class MacdStrategy : ITradingStrategy
             var macd = Indicators.Macd((double)data.AdjustedClosingPrice, Macd, yesterdayMacd);
             if (macd.Signal < macd.Value && yesterdayMacd.Signal > yesterdayMacd.Value)
             {
-                buy = new TradingAction()
-                {
-                    Usd = usd,
-                    Op = TradingAction.Operation.OpenBuy,
-                    Stock = data,
-                    Quantity = usd / data.AdjustedClosingPrice,
-                    Indicator = macd
-                };
-                result.Add(buy);
+                (portfolio, buy) = portfolio.Buy(portfolio.Usd, data, macd);
             }
 
             if (macd.Signal > macd.Value && yesterdayMacd.Signal < yesterdayMacd.Value && buy != null)
             {
-                usd = buy.Quantity * data.AdjustedClosingPrice;
-                var sell = new TradingAction()
-                {
-                    Usd = usd,
-                    Op = TradingAction.Operation.CloseBuy,
-                    Stock = data,
-                    Quantity = buy.Quantity,
-                    Diff = usd - buy.Usd,
-                    Indicator = macd
-                };
-                result.Add(sell);
+                portfolio = portfolio.Sell(buy.Quantity, data, macd);
                 buy = null;
             }
 
@@ -65,17 +43,9 @@ public class MacdStrategy : ITradingStrategy
         if (buy != null)
         {
             var last = stockDataPoints.Last();
-            usd = buy.Quantity * last.AdjustedClosingPrice;
-            var sell = new TradingAction()
-            {
-                Usd = usd,
-                Op = TradingAction.Operation.CloseBuy,
-                Stock = last,
-                Quantity = buy.Quantity
-            };
-            result.Add(sell);
+            portfolio = portfolio.Sell(buy.Quantity, last, null);
         }
 
-        return result;
+        return portfolio;
     }
 }

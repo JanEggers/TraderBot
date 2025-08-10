@@ -12,7 +12,7 @@ public class AnalyseTrendsRequestHandler : IRequestHandler<AnalyseTrendsRequest,
     public async Task<AnalyseTrendsResults> Handle(AnalyseTrendsRequest request, CancellationToken cancellationToken)
     {
         await Task.Yield();
-        var trends = request.StrategyResults.Actions.Trends(request.Dataset.Quotes).ToList();
+        var trends = request.StrategyResults.Portfolio.Actions.Trends(request.Dataset.Quotes).ToList();
         foreach (var item in trends)
         {
             item.Duration = item.Peak.Time - item.Start.Time;

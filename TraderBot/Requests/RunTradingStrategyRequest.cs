@@ -2,7 +2,7 @@
 
 public class RunTradingStrategyRequest : IRequest<RunTradingStrategyResult>
 {
-    public decimal Usd { get; set; }
+    public Portfolio Portfolio { get; set; }
 
     public ITradingStrategy Strategy { get; set; } = new BuyAndHoldStrategy();
 
@@ -15,38 +15,36 @@ public class RunTradingStrategyRequestHandler : IRequestHandler<RunTradingStrate
     {
         await Task.Yield();
         var datapoints = request.Dataset.Quotes.Values.First();
-        var actions = request.Strategy.Run(request.Dataset.Quotes, request.Usd);
-        if (!actions.Any())
+        var portfolio = request.Strategy.Run(request.Dataset.Quotes, request.Portfolio);
+        if (!portfolio.Actions.Any())
         {
             return new RunTradingStrategyResult()
             {
                 Strategy = request.Strategy,
-                Usd = request.Usd,
-                Actions = actions
+                Portfolio = portfolio,
             };
         }
 
-        var sell = actions.Last();
+        var sell = portfolio.Actions.Last();
 
-        foreach (var action in actions)
+        foreach (var action in portfolio.Actions)
         {
             action.Usd = Math.Round(action.Usd, 2);
         }
 
-        var returnPercentage = (sell.Usd - request.Usd) / request.Usd * 100;
+        var returnPercentage = (sell.Usd - request.Portfolio.Usd) / request.Portfolio.Usd * 100;
 
         var first = datapoints.First();
         var last = datapoints.Last();
         var totalYears = (last.Time - first.Time).TotalDays / 356;
-        var yearlyReturnPercentage = (Math.Pow((double)sell.Usd / (double)request.Usd, 1 / totalYears) - 1) * 100;
+        var yearlyReturnPercentage = (Math.Pow((double)sell.Usd / (double)request.Portfolio.Usd, 1 / totalYears) - 1) * 100;
 
         return new RunTradingStrategyResult()
         {
             Strategy = request.Strategy,
-            Usd = sell.Usd,
             TotalReturnPercentage = returnPercentage,
             YearlyReturnPercentage = (decimal)yearlyReturnPercentage,
-            Actions = actions,
+            Portfolio = portfolio
         };
     }    
 }

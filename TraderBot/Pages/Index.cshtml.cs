@@ -39,12 +39,12 @@ public class IndexModel : PageModel
 
         var buyAndHold = await _serviceScopeFactory.Send(new RunTradingStrategyRequest()
         {
-            Usd = 1000,
+            Portfolio = new Portfolio() { Usd = 1000 },
             Strategy = new BuyAndHoldStrategy(),
             Dataset = dataset
         });
 
-        points = buyAndHold.Actions.Select(a =>
+        points = buyAndHold.Portfolio.Actions.Select(a =>
         {
             return new DataPoint(DateOnly.FromDateTime(a.Stock.Time), a.Usd);
         }).ToList();
@@ -54,20 +54,20 @@ public class IndexModel : PageModel
 
         var macd = await _serviceScopeFactory.Send(new RunTradingStrategyRequest()
         {
-            Usd = 1000,
+            Portfolio = new Portfolio() { Usd = 1000 },
             Strategy = new MacdStrategy()
             {
                 Macd = new()
                 {
-                    Fast = 23,
-                    Slow = 30,
-                    Signal = 3
+                    Fast = 5,
+                    Slow = 3,
+                    Signal = 2
                 }
             },
             Dataset = dataset
         });
 
-        points = macd.Actions.Select(a =>
+        points = macd.Portfolio.Actions.Select(a =>
         {
             return new DataPoint(DateOnly.FromDateTime(a.Stock.Time), a.Usd);
         }).ToList();

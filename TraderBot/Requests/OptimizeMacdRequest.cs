@@ -46,7 +46,7 @@ public class OptimizeMacdRequestHandler : IRequestHandler<OptimizeMacdRequest>
                 {
                     var macd = await _serviceScopeFactory.Send(new RunTradingStrategyRequest()
                     {
-                        Usd = 1000,
+                        Portfolio = new Portfolio() { Usd = 1000 },
                         Strategy = strategy,
                         Dataset = request.Dataset
                     });
@@ -55,13 +55,13 @@ public class OptimizeMacdRequestHandler : IRequestHandler<OptimizeMacdRequest>
 
                 foreach (var macd in macds)
                 {
-                    if (best == null || best.Usd < macd.Usd)
+                    if (best == null || best.Portfolio.Usd < macd.Portfolio.Usd)
                     {
-                        if (macd.Actions.Count > 0)
+                        if (macd.Portfolio.Actions.Count > 0)
                         {
                             bestmacd = ((MacdStrategy)macd.Strategy).Macd;
                             best = macd;
-                            _logger.LogInformation($"new best {bestmacd} {best.Usd} {best.YearlyReturnPercentage}");
+                            _logger.LogInformation($"new best {bestmacd} {best.Portfolio.Usd} {best.YearlyReturnPercentage}");
                         }
                     }
                 }

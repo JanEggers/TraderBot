@@ -2,5 +2,5 @@
 
 public interface ITradingStrategy
 {
-    List<TradingAction> Run(IReadOnlyDictionary<string, IReadOnlyList<StockDataPoint>> dataset, decimal usd);
+    Portfolio Run(IReadOnlyDictionary<string, IReadOnlyList<StockDataPoint>> dataset, Portfolio portfolio);
 }
