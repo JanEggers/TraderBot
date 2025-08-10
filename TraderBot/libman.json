@@ -5,7 +5,10 @@
     {
       "library": "Chart.js@4.4.1",
       "destination": "wwwroot/lib/chartjs"
+    },
+    {
+      "library": "chartjs-plugin-zoom@2.2.0",
+      "destination": "wwwroot/lib/chartjs-zoom"
     }
-    
   ]
 }
