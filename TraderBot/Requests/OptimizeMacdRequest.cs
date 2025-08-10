@@ -40,9 +40,9 @@ public class OptimizeMacdRequestHandler : IRequestHandler<OptimizeMacdRequest>
                     }
                 });
 
-                var macds = new ConcurrentBag<RunTradingStrategyResult>();
+                var sem = new SemaphoreSlim(1);
 
-                await Parallel.ForEachAsync(strategies, async (strategy, ct) =>
+                await Parallel.ForEachAsync(strategies, new ParallelOptions() { MaxDegreeOfParallelism = 16 }, async (strategy, ct) =>
                 {
                     var macd = await _serviceScopeFactory.Send(new RunTradingStrategyRequest()
                     {
@@ -50,21 +50,27 @@ public class OptimizeMacdRequestHandler : IRequestHandler<OptimizeMacdRequest>
                         Strategy = strategy,
                         Dataset = request.Dataset
                     });
-                    macds.Add(macd);
-                });
 
-                foreach (var macd in macds)
-                {
-                    if (best == null || best.Portfolio.Usd < macd.Portfolio.Usd)
+                    try
                     {
-                        if (macd.Portfolio.Actions.Count > 0)
+                        await sem.WaitAsync(cancellationToken);
+
+
+                        if (best == null || best.Portfolio.Usd < macd.Portfolio.Usd)
                         {
-                            bestmacd = ((MacdStrategy)macd.Strategy).Macd;
-                            best = macd;
-                            _logger.LogInformation($"new best {bestmacd} {best.Portfolio.Usd} {best.YearlyReturnPercentage}");
+                            if (macd.Portfolio.Actions.Count > 0)
+                            {
+                                bestmacd = ((MacdStrategy)macd.Strategy).Macd;
+                                best = macd;
+                                _logger.LogInformation($"new best {bestmacd} {best.Portfolio.Usd} {best.YearlyReturnPercentage}");
+                            }
                         }
                     }
-                }
+                    finally
+                    {
+                        sem.Release();
+                    }
+                });
             }
         }
     }

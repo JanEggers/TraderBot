@@ -14,6 +14,9 @@ public record Portfolio
 
 
     public (Portfolio, TradingAction) Buy(decimal usd, StockDataPoint data, object indicator) {
+
+        usd *= (decimal)0.99;
+
         var buy = new TradingAction()
         {
             Usd = usd,
@@ -33,6 +36,9 @@ public record Portfolio
 
     public Portfolio Sell(decimal quantity, StockDataPoint data, object indicator) {
         var usd = quantity * data.AdjustedClosingPrice;
+
+        usd *= (decimal)0.99;
+
         var sell = new TradingAction()
         {
             Usd = usd,
